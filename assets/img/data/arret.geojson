@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "arret",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "X": 42.37405, "Y": 11.108931, "ID": 70, "Statut": "En arrêt", "Nom_Projet": "Formation des jeunes filles aux AGR (coutures", "Regions": "Dikhil", "Inst_respo": "Union Nationale des Femmes pour le Développement", "Parte_mise": null, "Parter_Fin": null, "Budget_Pro": null }, "geometry": { "type": "Point", "coordinates": [ 42.37405, 11.108931 ] } }
+]
+}
