@@ -224,7 +224,7 @@ var poteau = L.geoJson(null, {
     }
   }
 });
-$.getJSON("data/arret.geojson", function (data) {
+$.getJSON("data/arrets.geojson", function (data) {
   poteau.addData(data);
   map.addLayer(poteauLayer);
 });
