@@ -371,7 +371,7 @@ var dogley_zone1 = L.geoJson(null, {
     });
   }
 });
-$.getJSON("data/route_principal_rasdika.geojson", function (data) {
+$.getJSON("data/route_principale_rasdika.geojson", function (data) {
   dogley_zone1.addData(data);
 });
 
