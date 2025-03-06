@@ -271,7 +271,7 @@ var hayabley_zone2 = L.geoJson(null, {
     });
   }
 });
-$.getJSON("data/Route_principal_boulaos.geojson", function (data) {
+$.getJSON("data/route_principal_boulaos.geojson", function (data) {
   hayabley_zone2.addData(data);
 });
 
