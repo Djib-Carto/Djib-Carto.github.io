@@ -159,7 +159,7 @@ var boroughs = L.geoJson(null, {
   style: function (feature) {
     return {
       color: "black",
-      weight: 1,
+      weight: 0.001,
       fill: false,
       opacity: 0.5,
       clickable: false
@@ -175,7 +175,7 @@ var boroughs = L.geoJson(null, {
     });
   }
 });
-$.getJSON("data/", function (data) {
+$.getJSON("data/djibouti.geojson", function (data) {
   boroughs.addData(data);
 });
 
@@ -754,7 +754,7 @@ var compteur = L.geoJson(null, {
       var content = "<table class='table table-striped table-bordered table-condensed'>" + "<tr><th>NOM</th><td>" + feature.properties.Nom + "</td></tr>"   +"<table>";
       layer.on({
         click: function (e) {
-          $("#feature-title").html(feature.properties.repondant);
+          $("#feature-title").html(feature.properties.Nom);
           $("#feature-info").html(content);
           $("#featureModal").modal("show");
           highlight.clearLayers().addLayer(L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], highlightStyle));
@@ -763,7 +763,7 @@ var compteur = L.geoJson(null, {
       $("#feature-list tbody").append('<tr class="feature-row" id="' + L.stamp(layer) + '" lat="' + layer.getLatLng().lat + '" lng="' + layer.getLatLng().lng + '"><td style="vertical-align: middle;"><img width="16" height="18" src="petrole.svg"></td><td class="feature-name">' + layer.feature.properties.Nom + '</td><td style="vertical-align: middle;"><i class="fa fa-chevron-right pull-right"></i></td></tr>');
       compteurSearch.push({
          name: layer.feature.properties.Nom,
-        address: layer.feature.properties.localite,
+        address: layer.feature.properties.Nom,
         source: "compteur",
         id: L.stamp(layer),
         lat: layer.feature.geometry.coordinates[1],
@@ -1004,6 +1004,7 @@ var groupedOverlays = {
      "En cours de réconstruction": hayabley_zone2,
      "Corridor prévu": hayabley_zone3,
      "Réhabilitation prévu": dogley_zone1
+
 
      
 
