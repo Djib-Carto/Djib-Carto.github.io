@@ -175,7 +175,7 @@ var boroughs = L.geoJson(null, {
     });
   }
 });
-$.getJSON("data/Djibouti.geojson", function (data) {
+$.getJSON("data/", function (data) {
   boroughs.addData(data);
 });
 
@@ -999,7 +999,7 @@ var groupedOverlays = {
 
   },
   "Reference": {
-    "Zone d'etude": boroughs,
+    
      "Réhabilité": subwayLines,
      "En cours de réconstruction": hayabley_zone2,
      "Corridor prévu": hayabley_zone3,
