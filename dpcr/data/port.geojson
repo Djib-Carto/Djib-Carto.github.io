@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"name": "port",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": null, "Nom": "SGTD", "image": "sgtd.jpg" }, "geometry": { "type": "Point", "coordinates": [ 43.105519844793562, 11.596223306084616 ] } },
+{ "type": "Feature", "properties": { "id": null, "Nom": "DMP", "image": "dmp.jpg" }, "geometry": { "type": "Point", "coordinates": [ 43.06622601434325, 11.597880857401917 ] } },
+{ "type": "Feature", "properties": { "id": null, "Nom": "Horizon Terminal", "image": "horizon.jpg" }, "geometry": { "type": "Point", "coordinates": [ 43.079025994765466, 11.589862110191335 ] } },
+{ "type": "Feature", "properties": { "id": null, "Nom": "Port de Tadjourah", "image": "tadjourah.jpg" }, "geometry": { "type": "Point", "coordinates": [ 42.838082346785569, 11.772114864694027 ] } },
+{ "type": "Feature", "properties": { "id": null, "Nom": "Port de goubet", "image": "goubet.jpg" }, "geometry": { "type": "Point", "coordinates": [ 42.524060946661194, 11.538905170982007 ] } }
+]
+}
