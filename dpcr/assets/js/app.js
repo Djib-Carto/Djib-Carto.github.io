@@ -136,14 +136,14 @@ function syncSidebar() {
 
 /* Basemap Layers */
 var osmLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
-    maxZoom: 19,
+    maxZoom: 13,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
     subdomains: ['a', 'b', 'c', 'd']
 });
 
 var Satellite = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: '© <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
+            maxZoom: 13
         })
 
 /* Overlay Layers */
@@ -159,7 +159,7 @@ var boroughs = L.geoJson(null, {
   style: function (feature) {
     return {
       color: "black",
-      weight: 0.001,
+      weight: 1,
       fill: false,
       opacity: 0.5,
       clickable: false
@@ -225,7 +225,7 @@ var subwayLines = L.geoJson(null, {
     });
   }
 });
-$.getJSON("data/rehabilite.geojson", function (data) {
+$.getJSON("data/termine.geojson", function (data) {
   subwayLines.addData(data);
 });
 
@@ -240,7 +240,7 @@ var subwayColors = {"1":"#ff3135", "2":"#ff3135", "3":"ff3135", "4":"#009b2e",
 var hayabley_zone2 = L.geoJson(null, {
   style: function (feature) {
       return {
-        color: "#440154",
+        color: "#ffff00",
         weight: 5,
         opacity: 1
       };
@@ -290,7 +290,7 @@ var subwayColors = {"1":"#ff3135", "2":"#ff3135", "3":"ff3135", "4":"#009b2e",
 var hayabley_zone3 = L.geoJson(null, {
   style: function (feature) {
       return {
-        color: "#ff7f00",
+        color: "#0000ff",
         weight: 5,
         opacity: 1
       };
@@ -324,7 +324,7 @@ var hayabley_zone3 = L.geoJson(null, {
     });
   }
 });
-$.getJSON("data/corridor_prevu.geojson", function (data) {
+$.getJSON("data/en_cours.geojson", function (data) {
   hayabley_zone3.addData(data);
 });
 
@@ -339,7 +339,7 @@ var subwayColors = {"1":"#ff3135", "2":"#ff3135", "3":"ff3135", "4":"#009b2e",
 var dogley_zone1 = L.geoJson(null, {
   style: function (feature) {
       return {
-        color: "#851D40",
+        color: "#ff8000",
         weight: 5,
         opacity: 1
       };
@@ -425,7 +425,7 @@ var dogley_zone2 = L.geoJson(null, {
     });
   }
 });
-$.getJSON("data/corridor_stategique.geojson", function (data) {
+$.getJSON("data/", function (data) {
   dogley_zone2.addData(data);
 });
 
@@ -999,12 +999,12 @@ var groupedOverlays = {
 
   },
   "Reference": {
-    
-     "Réhabilité": subwayLines,
-     "En cours de réconstruction": hayabley_zone2,
-     "Corridor prévu": hayabley_zone3,
-     "Réhabilitation prévu": dogley_zone1
-
+      "Delimitation administrative ": boroughs,
+     "Projet terminé": subwayLines,
+     "Projet en cours": hayabley_zone2,
+     "Proje à l'étude": hayabley_zone3,
+     "Projet prévu / en recherche de financement ": dogley_zone1
+     
 
      
 
