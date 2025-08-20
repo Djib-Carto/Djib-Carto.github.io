@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <title>H63 – Precipitation Rate (MSG IODC) — Web Mapping</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    :root{
+      --panel-w: 360px;
+      --gutter: 12px;
+      --accent: #0f766e;
+    }
+    html,body,#app { height: 100%; margin: 0; font-family: Inter, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    #app { display: grid; grid-template-columns: 1fr var(--panel-w); grid-template-rows: auto 1fr; gap: var(--gutter); background:#f3f4f6; }
+
+    header.app-header {
+      grid-column: 1 / -1;
+      display:flex; align-items:center; gap:12px;
+      padding:14px; background:linear-gradient(90deg,#ffffff,#fafafa); border-bottom:1px solid #e6e6e6;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    header.app-header h1 { margin:0; font-size:16px; color:#0f172a; }
+    header.app-header p { margin:0; color:#475569; font-size:13px; }
+
+    #map { grid-column: 1 / 2; grid-row: 2 / 3; height: calc(100% - 16px); margin: 8px; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 18px rgba(15,23,42,0.08); }
+
+    aside.panel {
+      grid-column: 2 / 3; grid-row: 2 / 3;
+      margin: 8px; background:white; border-radius:10px; padding:12px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      display:flex; flex-direction:column; gap:10px; overflow:auto;
+    }
+
+    .section-title { font-weight:600; font-size:13px; color:#0f172a; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+    .controls-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    button.control {
+      background:var(--accent); color:white; border:0; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600;
+    }
+    button.ghost { background:transparent; border:1px solid #e6e6e6; color:#0f172a; padding:8px 10px; border-radius:8px; cursor:pointer; }
+    input[type="range"] { width:100%; }
+    .small { font-size:12px; color:#475569; }
+
+    .legend-box img { width:100%; display:block; border-radius:6px; border:1px solid #e6e6e6; }
+
+    .info-box { background:#f8fafc; border:1px solid #e6e6e6; padding:8px; border-radius:8px; font-size:13px; color:#0f172a; }
+
+    .row { display:flex; gap:8px; align-items:center; }
+    label { font-size:12px; color:#475569; }
+
+    footer.small-note { font-size:12px; color:#64748b; margin-top:6px; }
+
+    /* Responsiveness */
+    @media (max-width: 900px) {
+      #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+      aside.panel { grid-column: 1 / -1; grid-row: 3 / 4; margin:8px; }
+      #map { grid-column: 1 / -1; grid-row: 2 / 3; margin:8px; height:60vh; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div style="display:flex;flex-direction:column">
+        <h1>H63 — Precipitation rate at ground (MSG IODC)</h1>
+        <p>Source: EUMETSAT WMS-T — couche <code>msg_iodc:h63</code> — pas: 15 minutes</p>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+        <div class="small">Période: <strong id="periodLabel">2022-12-09 → 2025-07-01</strong></div>
+      </div>
+    </header>
+
+    <div id="map"></div>
+
+    <aside class="panel" aria-labelledby="controls-title">
+      <div>
+        <div class="section-title"><span id="controls-title">Contrôles temporels</span><span class="small">TIME (UTC)</span></div>
+
+        <div class="row" style="justify-content:space-between">
+          <div style="flex:1">
+            <div class="controls-row">
+              <button id="btnPlay" class="control">▶️ Lecture</button>
+              <button id="btnPause" class="ghost">⏸️ Pause</button>
+              <button id="btnStepBack" class="ghost">-15m</button>
+              <button id="btnStepFwd" class="ghost">+15m</button>
+            </div>
+          </div>
+
+          <div style="width:120px;">
+            <label class="small">Vitesse</label>
+            <select id="speed" style="width:100%; padding:6px; border-radius:6px; border:1px solid #e6e6e6;">
+              <option value="1500">Lente (1.5 s)</option>
+              <option value="1000" selected>Normale (1 s)</option>
+              <option value="600">Rapide (0.6 s)</option>
+              <option value="300">Très rapide (0.3 s)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="small">Sélection manuelle (UTC)</label>
+          <input id="datetime" type="datetime-local" style="width:100%; padding:8px; border-radius:6px; border:1px solid #e6e6e6;">
+          <div class="small" style="margin-top:6px">Pas: <strong>15 minutes</strong> — Arrondi automatique au pas.</div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="small">Curseur temporel</label>
+          <input id="timeSlider" type="range" min="0" max="0" step="1" value="0">
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748b; margin-top:4px">
+            <div id="timeStartLabel">—</div>
+            <div id="timeCurrentLabel">—</div>
+            <div id="timeEndLabel">—</div>
+          </div>
+        </div>
+      </div>
+
+      <hr style="border:none; height:1px; background:#f1f5f9; margin:8px 0;">
+
+      <div>
+        <div class="section-title"><span>Affichage</span><span class="small">Calques & rendu</span></div>
+
+        <div style="margin-bottom:8px;">
+          <label class="small">Opacité</label>
+          <input id="opacity" type="range" min="0" max="1" step="0.05" value="0.75">
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label class="small">Fond carto</label>
+          <div class="row">
+            <select id="basemap" style="padding:6px; border-radius:6px; border:1px solid #e6e6e6; width:100%;">
+              <option value="osm" selected>OpenStreetMap</option>
+              <option value="esri">ESRI World Imagery</option>
+              <option value="none">Aucun (fond transparent)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="small">Légende</label>
+          <div class="legend-box" style="margin-top:6px;">
+            <img id="legendImg" src="https://view.eumetsat.int/geoserver/wcs?SERVICE=WMS&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=msg_iodc:h63" alt="Légende">
+          </div>
+        </div>
+      </div>
+
+      <hr style="border:none; height:1px; background:#f1f5f9; margin:8px 0;">
+
+      <div>
+        <div class="section-title"><span>Interrogation</span><span class="small">GetFeatureInfo</span></div>
+        <div class="info-box" id="infoBox">Clique sur la carte pour interroger la valeur estimée (mm/h).</div>
+        <div class="small" style="margin-top:8px">Note: la disponibilité des infos au clic dépend de la configuration du serveur WMS.</div>
+      </div>
+
+      <footer class="small-note">Démo: couche <code>msg_iodc:h63</code> — service: <code>https://view.eumetsat.int/geoserver/wcs</code></footer>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    /* ---------------------- Configuration temporelle ---------------------- */
+    const TIME_START = new Date("2022-12-09T08:00:00Z");
+    const TIME_END   = new Date("2025-07-01T03:15:00Z");
+    const STEP_MIN   = 15; // minutes
+
+    // Build array of times (careful: many items, but acceptable for local use).
+    function buildTimes(start, end, stepMin) {
+      const arr = [];
+      let t = new Date(start);
+      while (t <= end) {
+        arr.push(new Date(t));
+        t = new Date(t.getTime() + stepMin * 60 * 1000);
+      }
+      return arr;
+    }
+    const times = buildTimes(TIME_START, TIME_END, STEP_MIN);
+
+    // Helpers: format ISO in UTC w/out milliseconds for WMS TIME parameter
+    function isoUTC(dt) { return dt.toISOString().replace('.000Z','Z'); }
+    function toLocalDatetimeInputValue(dt) {
+      // convert UTC to local for datetime-local control (it expects local)
+      const local = new Date(dt.getTime() - dt.getTimezoneOffset()*60000);
+      return local.toISOString().slice(0,16);
+    }
+    function fromDatetimeInputToUTC(val) {
+      // val is "YYYY-MM-DDTHH:MM" local -> convert to UTC
+      const local = new Date(val);
+      return new Date(local.getTime() + local.getTimezoneOffset()*60000);
+    }
+    function snapToStep(date) {
+      const minsFromStart = Math.round((date.getTime() - TIME_START.getTime())/60000);
+      const snapped = Math.round(minsFromStart / STEP_MIN) * STEP_MIN;
+      return new Date(TIME_START.getTime() + snapped * 60000);
+    }
+
+    /* ---------------------- Map & Layers ---------------------- */
+    const map = L.map('map', { preferCanvas: true }).setView([0, 60], 3.5);
+
+    // Basemap layers
+    const baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; Moustapha Farah' });
+    const baseESRI = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
+    const baseNone = L.layerGroup([]); // empty group for 'none'
+
+    baseOSM.addTo(map);
+
+    // WMS service and layer name
+    const WMS_URL = 'https://view.eumetsat.int/geoserver/wcs';
+    const LAYER_NAME = 'msg_iodc:h63';
+
+    // Function to create a WMS tile layer for a specific time
+    function createWMSLayerFor(timeISO) {
+      // We use VERSION=1.1.1 & SRS=EPSG:4326 to ease getFeatureInfo (pixel coords logic)
+      return L.tileLayer.wms(WMS_URL, {
+        layers: LAYER_NAME,
+        format: 'image/png',
+        transparent: true,
+        time: timeISO,
+        version: '1.1.1',
+        srs: 'EPSG:4326',
+        // crossOrigin: true might be needed for legend image; tile server must allow CORS
+      });
+    }
+
+    // Current index in times[]
+    let index = times.length - 1; // start at the latest
+    let wms = createWMSLayerFor(isoUTC(times[index]));
+    wms.addTo(map);
+
+    /* ---------------------- UI Elements ---------------------- */
+    const btnPlay = document.getElementById('btnPlay');
+    const btnPause = document.getElementById('btnPause');
+    const btnStepBack = document.getElementById('btnStepBack');
+    const btnStepFwd = document.getElementById('btnStepFwd');
+    const speedSel = document.getElementById('speed');
+    const datetimeInput = document.getElementById('datetime');
+    const slider = document.getElementById('timeSlider');
+    const labelStart = document.getElementById('timeStartLabel');
+    const labelEnd = document.getElementById('timeEndLabel');
+    const labelCurrent = document.getElementById('timeCurrentLabel');
+    const periodLabel = document.getElementById('periodLabel');
+    const opacityInput = document.getElementById('opacity');
+    const basemapSel = document.getElementById('basemap');
+    const infoBox = document.getElementById('infoBox');
+    const legendImg = document.getElementById('legendImg');
+
+    // Initialize labels & slider
+    slider.max = times.length - 1;
+    slider.value = index;
+    labelStart.textContent = isoUTC(times[0]).slice(0,16).replace('T',' ');
+    labelEnd.textContent = isoUTC(times[times.length-1]).slice(0,16).replace('T',' ');
+    labelCurrent.textContent = isoUTC(times[index]).slice(0,16).replace('T',' ');
+    periodLabel.textContent = isoUTC(TIME_START).slice(0,10) + ' → ' + isoUTC(TIME_END).slice(0,10);
+
+    // Set datetime input initial value (local)
+    datetimeInput.value = toLocalDatetimeInputValue(times[index]);
+
+    // Keep UI consistent function
+    function updateUI() {
+      slider.value = index;
+      labelCurrent.textContent = isoUTC(times[index]).slice(0,16).replace('T',' ');
+      datetimeInput.value = toLocalDatetimeInputValue(times[index]);
+      // Update legend (some servers return same legend; still refresh)
+      legendImg.src = `${WMS_URL}?SERVICE=WMS&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${encodeURIComponent(LAYER_NAME)}&TIME=${encodeURIComponent(isoUTC(times[index]))}`;
+    }
+
+    // Swap WMS layer to new time (keeps only one WMS layer and prevents stacking)
+    function setTimeIndex(newIndex) {
+      newIndex = Math.max(0, Math.min(times.length - 1, newIndex));
+      index = newIndex;
+      const tISO = isoUTC(times[index]);
+      // remove old
+      if (wms) map.removeLayer(wms);
+      wms = createWMSLayerFor(tISO);
+      wms.setOpacity(parseFloat(opacityInput.value));
+      wms.addTo(map);
+      updateUI();
+    }
+
+    // Opacity control
+    opacityInput.addEventListener('input', () => {
+      const v = parseFloat(opacityInput.value);
+      if (wms) wms.setOpacity(v);
+    });
+
+    // Basemap switch
+    basemapSel.addEventListener('change', (e) => {
+      const v = e.target.value;
+      map.eachLayer(layer => {
+        // remove only basemaps (not the WMS) - identify by source URLs
+        if (layer === wms) return;
+        if (layer === baseOSM || layer === baseESRI || layer === baseNone) map.removeLayer(layer);
+      });
+      if (v === 'osm') baseOSM.addTo(map);
+      else if (v === 'esri') baseESRI.addTo(map);
+      else if (v === 'none') baseNone.addTo(map);
+    });
+
+    /* ---------------------- Timeline controls ---------------------- */
+    slider.addEventListener('input', (e) => {
+      setTimeIndex(parseInt(e.target.value, 10));
+    });
+
+    datetimeInput.addEventListener('change', (e) => {
+      try {
+        const utc = fromDatetimeInputToUTC(e.target.value);
+        const snapped = snapToStep(utc);
+        // find nearest index
+        const idx = Math.round((snapped.getTime() - TIME_START.getTime()) / (STEP_MIN * 60000));
+        setTimeIndex(idx);
+      } catch (err) {
+        console.warn('datetime parse error', err);
+      }
+    });
+
+    btnStepBack.addEventListener('click', () => setTimeIndex(index - 1));
+    btnStepFwd.addEventListener('click', () => setTimeIndex(index + 1));
+
+    // Playback
+    let intervalId = null;
+    btnPlay.addEventListener('click', () => {
+      if (intervalId) return;
+      const speed = parseInt(speedSel.value, 10);
+      intervalId = setInterval(() => {
+        const next = (index + 1) % times.length;
+        setTimeIndex(next);
+      }, speed);
+    });
+    btnPause.addEventListener('click', () => {
+      if (intervalId) { clearInterval(intervalId); intervalId = null; }
+    });
+
+    /* ---------------------- GetFeatureInfo (clic) ---------------------- */
+    // Build GetFeatureInfo URL for WMS 1.1.1 (SRS, x/y)
+    async function getFeatureInfo(latlng) {
+      // compute bbox for current map view in EPSG:4326 (west,south,east,north)
+      const size = map.getSize();
+      const bounds = map.getBounds();
+      const sw = bounds.getSouthWest(); // latlng
+      const ne = bounds.getNorthEast();
+      const minx = sw.lng, miny = sw.lat, maxx = ne.lng, maxy = ne.lat;
+      const bbox = [minx, miny, maxx, maxy].join(',');
+      const width = size.x, height = size.y;
+      // pixel coords (x,y) relative to map container
+      const point = map.latLngToContainerPoint(latlng);
+      const x = Math.round(point.x), y = Math.round(point.y);
+
+      const params = {
+        SERVICE: 'WMS',
+        VERSION: '1.1.1',
+        REQUEST: 'GetFeatureInfo',
+        LAYERS: LAYER_NAME,
+        QUERY_LAYERS: LAYER_NAME,
+        STYLES: '',
+        BBOX: bbox,
+        SRS: 'EPSG:4326',
+        WIDTH: width,
+        HEIGHT: height,
+        FORMAT: 'image/png',
+        INFO_FORMAT: 'application/json',
+        X: x,
+        Y: y,
+        TIME: isoUTC(times[index]),
+      };
+
+      const url = WMS_URL + '?' + Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('No response');
+        const data = await resp.json();
+        // parse into meaningful value if available
+        let value = null;
+        if (data && data.features && data.features.length) {
+          const props = data.features[0].properties || {};
+          // try common property names
+          value = props.value ?? props.VALUE ?? props.grayIndex ?? props.GRAY_INDEX ?? JSON.stringify(props);
+        } else {
+          value = 'n/d';
+        }
+        return { ok: true, value, raw: data };
+      } catch (err) {
+        return { ok: false, error: String(err) };
+      }
+    }
+
+    map.on('click', async (e) => {
+      infoBox.textContent = 'Interrogation…';
+      const res = await getFeatureInfo(e.latlng);
+      if (res.ok) {
+        infoBox.innerHTML = `<strong>Coord</strong>: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}<br><strong>Valeur</strong>: ${res.value} (approx. mm/h)`;
+      } else {
+        infoBox.textContent = 'Aucune info disponible (GetFeatureInfo a échoué).';
+      }
+    });
+
+    /* ---------------------- Keyboard shortcuts & UX polish ---------------------- */
+    // Space toggles play/pause when focus not on an input
+    document.addEventListener('keydown', (ev) => {
+      const active = document.activeElement;
+      const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
+      if (isInput) return;
+      if (ev.code === 'Space') {
+        ev.preventDefault();
+        if (intervalId) { clearInterval(intervalId); intervalId = null; }
+        else {
+          const speed = parseInt(speedSel.value, 10);
+          intervalId = setInterval(() => { setTimeIndex((index + 1) % times.length); }, speed);
+        }
+      } else if (ev.key === 'ArrowLeft') setTimeIndex(index - 1);
+      else if (ev.key === 'ArrowRight') setTimeIndex(index + 1);
+    });
+
+    /* ---------------------- Initial render & safety ---------------------- */
+    setTimeIndex(index); // apply initial layer and UI
+
+    // If legend image fails due to CORS or no legend, hide it gracefully
+    legendImg.addEventListener('error', () => {
+      legendImg.style.display = 'none';
+    });
+
+    // Inform user when many timestamps -> slider length
+    if (times.length > 50000) {
+      console.warn('Be careful: a large number of time steps (' + times.length + ') may slow the browser.');
+    }
+
+    // Prevent double-stacking of layers (safety when window resized etc.)
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        // ensure exactly one wms instance present
+        map.eachLayer(layer => {
+          // do nothing; just a placeholder for any cleanup if needed
+        });
+      }, 200);
+    });
+  </script>
+</body>
+</html>
