@@ -14,9 +14,8 @@
 html,body,#app { height:100%; margin:0; font-family: Inter, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
 #app { display:grid; grid-template-columns:1fr var(--panel-w); grid-template-rows:auto 1fr; gap:var(--gutter); background:#f3f4f6; }
 
-header.app-header { grid-column:1/-1; display:flex; align-items:center; gap:12px; padding:14px; background:linear-gradient(90deg,#ffffff,#fafafa); border-bottom:1px solid #e6e6e6; box-shadow:0 1px 2px rgba(0,0,0,0.03); }
+header.app-header { grid-column:1/-1; display:flex; align-items:center; gap:12px; padding:14px; background:linear-gradient(90deg,#ffffff,#fafafa); border-bottom:1px solid #e6e6e6; box-shadow:0 1px 2px rgba(0,0,0,0.03); justify-content:center; text-align:center;}
 header.app-header h1 { margin:0; font-size:16px; color:#0f172a; }
-header.app-header p { margin:0; color:#475569; font-size:13px; }
 
 #map { grid-column:1/2; grid-row:2/3; height: calc(100% - 16px); margin: 8px; border-radius: 8px; overflow:hidden; box-shadow: 0 6px 18px rgba(15,23,42,0.08); }
 aside.panel { grid-column:2/3; grid-row:2/3; margin:8px; background:white; border-radius:10px; padding:12px; box-shadow:0 6px 18px rgba(15,23,42,0.06); display:flex; flex-direction:column; gap:10px; overflow:auto; }
@@ -37,12 +36,11 @@ input[type="range"] { width:100%; }
 </head>
 <body>
 <div id="app">
-<header class="app-header" style="justify-content:center; text-align:center;">
+<header class="app-header">
   <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
-    <h1>🌍 Nuages Mondiaux en Temps Réel – Satellite Terra / Capteur MODIS – NASA GIBS</h1>
+    <h1>🌍 Nuages Mondiaux – Satellite Terra / Capteur MODIS – NASA GIBS</h1>
   </div>
 </header>
-
 
 <div id="map"></div>
 
@@ -96,84 +94,105 @@ input[type="range"] { width:100%; }
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 /* ------------------ Config temporelle ------------------ */
+const STEP_MIN = 15; // minutes entre images
 const TIME_START = new Date("2000-03-31T05:00:00Z"); // début 2000
-const TIME_END   = new Date(); // par défaut aujourd'hui
-const STEP_MIN   = 15; // minutes
 
+// Dernière heure disponible (arrondie au pas de 15 min)
+function getLastAvailableTime() {
+    const now = new Date();
+    return new Date(Math.floor(now.getTime() / (STEP_MIN*60000)) * (STEP_MIN*60000));
+}
+const TIME_END = getLastAvailableTime();
+
+// Génération des timestamps
 function buildTimes(start,end,stepMin){
   const arr=[]; let t=new Date(start);
   while(t<=end){ arr.push(new Date(t)); t=new Date(t.getTime()+stepMin*60000); }
   return arr;
 }
-const times=buildTimes(TIME_START,TIME_END,STEP_MIN);
+const times = buildTimes(TIME_START, TIME_END, STEP_MIN);
 
+// Fonctions utilitaires
 function isoUTC(dt){return dt.toISOString().replace('.000Z','Z');}
 function toLocalDatetimeInputValue(dt){ const local=new Date(dt.getTime()-dt.getTimezoneOffset()*60000); return local.toISOString().slice(0,16); }
 function fromDatetimeInputToUTC(val){ const local=new Date(val); return new Date(local.getTime()+local.getTimezoneOffset()*60000); }
 
 /* ------------------ Carte & couches ------------------ */
-const map=L.map('map',{preferCanvas:true}).setView([0,20],3.5);
-const baseOSM=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{ attribution:'© Moustapha Farah' }).addTo(map);
-const WMS_URL='https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
-const LAYER_NAME='MODIS_Terra_CorrectedReflectance_TrueColor';
+const map = L.map('map',{preferCanvas:true}).setView([0,20],3.5);
+const baseOSM = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{ attribution:'© Moustapha Farah' }).addTo(map);
+const WMS_URL = 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
+const LAYER_NAME = 'MODIS_Terra_CorrectedReflectance_TrueColor';
 
 function createWMSLayer(timeISO){
   return L.tileLayer.wms(WMS_URL,{
-    layers:LAYER_NAME,
-    format:'image/png',
-    transparent:true,
-    time:timeISO,
-    opacity:parseFloat(document.getElementById('opacity').value)
+    layers: LAYER_NAME,
+    format: 'image/png',
+    transparent: true,
+    time: timeISO,
+    opacity: parseFloat(document.getElementById('opacity').value)
   });
 }
 
-let index=0;
-let wms=createWMSLayer(isoUTC(times[index]));
+let index = times.length - 1; // dernière image disponible
+let wms = createWMSLayer(isoUTC(times[index]));
 wms.addTo(map);
 
 /* ------------------ UI ------------------ */
-const btnPlay=document.getElementById('btnPlay');
-const btnPause=document.getElementById('btnPause');
-const btnStepBack=document.getElementById('btnStepBack');
-const btnStepFwd=document.getElementById('btnStepFwd');
-const speedSel=document.getElementById('speed');
-const datetimeInput=document.getElementById('datetime');
-const slider=document.getElementById('timeSlider');
-const labelStart=document.getElementById('timeStartLabel');
-const labelEnd=document.getElementById('timeEndLabel');
-const labelCurrent=document.getElementById('timeCurrentLabel');
-const opacityInput=document.getElementById('opacity');
+const btnPlay = document.getElementById('btnPlay');
+const btnPause = document.getElementById('btnPause');
+const btnStepBack = document.getElementById('btnStepBack');
+const btnStepFwd = document.getElementById('btnStepFwd');
+const speedSel = document.getElementById('speed');
+const datetimeInput = document.getElementById('datetime');
+const slider = document.getElementById('timeSlider');
+const labelStart = document.getElementById('timeStartLabel');
+const labelEnd = document.getElementById('timeEndLabel');
+const labelCurrent = document.getElementById('timeCurrentLabel');
+const opacityInput = document.getElementById('opacity');
 
-slider.max=times.length-1; slider.value=index;
-labelStart.textContent=isoUTC(times[0]).slice(0,16).replace('T',' ');
-labelEnd.textContent=isoUTC(times[times.length-1]).slice(0,16).replace('T',' ');
-labelCurrent.textContent=isoUTC(times[index]).slice(0,16).replace('T',' ');
-datetimeInput.value=toLocalDatetimeInputValue(times[index]);
+slider.max = times.length - 1;
+slider.value = index;
+labelStart.textContent = isoUTC(times[0]).slice(0,16).replace('T',' ');
+labelEnd.textContent = isoUTC(times[times.length-1]).slice(0,16).replace('T',' ');
+labelCurrent.textContent = isoUTC(times[index]).slice(0,16).replace('T',' ');
+datetimeInput.value = toLocalDatetimeInputValue(times[index]);
 
-function updateUI(){ slider.value=index; labelCurrent.textContent=isoUTC(times[index]).slice(0,16).replace('T',' '); datetimeInput.value=toLocalDatetimeInputValue(times[index]); }
-function setTimeIndex(newIndex){ newIndex=Math.max(0,Math.min(times.length-1,newIndex)); index=newIndex; if(wms) map.removeLayer(wms); wms=createWMSLayer(isoUTC(times[index])); wms.addTo(map); updateUI(); }
+function updateUI(){
+  slider.value = index;
+  labelCurrent.textContent = isoUTC(times[index]).slice(0,16).replace('T',' ');
+  datetimeInput.value = toLocalDatetimeInputValue(times[index]);
+}
+
+function setTimeIndex(newIndex){
+  newIndex = Math.max(0, Math.min(times.length - 1, newIndex));
+  index = newIndex;
+  if(wms) map.removeLayer(wms);
+  wms = createWMSLayer(isoUTC(times[index]));
+  wms.addTo(map);
+  updateUI();
+}
 
 btnStepBack.addEventListener('click',()=>setTimeIndex(index-1));
 btnStepFwd.addEventListener('click',()=>setTimeIndex(index+1));
 slider.addEventListener('input',()=>setTimeIndex(parseInt(slider.value,10)));
 
 datetimeInput.addEventListener('change',(e)=>{
-  const utc=fromDatetimeInputToUTC(e.target.value);
-  const snapped=new Date(Math.round((utc.getTime()-TIME_START.getTime())/(STEP_MIN*60000))*(STEP_MIN*60000)+TIME_START.getTime());
-  const idx=Math.round((snapped.getTime()-TIME_START.getTime())/(STEP_MIN*60000));
+  const utc = fromDatetimeInputToUTC(e.target.value);
+  const snapped = new Date(Math.round((utc.getTime()-TIME_START.getTime())/(STEP_MIN*60000))*(STEP_MIN*60000)+TIME_START.getTime());
+  const idx = Math.round((snapped.getTime()-TIME_START.getTime())/(STEP_MIN*60000));
   setTimeIndex(idx);
 });
 
 opacityInput.addEventListener('input',()=>{ if(wms) wms.setOpacity(parseFloat(opacityInput.value)); });
 
-let intervalId=null;
+let intervalId = null;
 btnPlay.addEventListener('click',()=>{
   if(intervalId) return;
-  const speed=parseInt(speedSel.value,10);
-  intervalId=setInterval(()=>{ setTimeIndex((index+1)%times.length); },speed);
+  const speed = parseInt(speedSel.value,10);
+  intervalId = setInterval(()=>{ setTimeIndex((index+1)%times.length); }, speed);
 });
 btnPause.addEventListener('click',()=>{
-  if(intervalId){ clearInterval(intervalId); intervalId=null; }
+  if(intervalId){ clearInterval(intervalId); intervalId = null; }
 });
 
 setTimeIndex(index);
