@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>VIIRS SNPP – Observation Nocturne</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+html, body, #app { height:100%; margin:0; font-family:Inter,sans-serif; }
+#app { display:grid; grid-template-columns:1fr 360px; grid-template-rows:auto 1fr; gap:12px; background:#f3f4f6; }
+
+/* Header réduit */
+header.app-header {
+  grid-column:1/-1;
+  text-align:center;
+  padding:8px 14px;
+  background:#ffffff;
+  border-bottom:1px solid #e6e6e6;
+  box-shadow:0 1px 2px rgba(0,0,0,0.03);
+}
+header.app-header h1 { margin:0; font-size:20px; }
+
+#map { grid-column:1/2; grid-row:2/3; margin:8px; border-radius:8px; height:calc(100% - 16px); box-shadow:0 6px 18px rgba(15,23,42,0.08); }
+
+aside.panel {
+  grid-column:2/3; grid-row:2/3;
+  margin:8px; background:white; border-radius:10px; padding:12px;
+  box-shadow:0 6px 18px rgba(15,23,42,0.06);
+  display:flex; flex-direction:column; gap:10px; overflow:auto;
+}
+
+.section-title { font-weight:600; font-size:13px; color:#0f172a; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+input[type="range"], select, input[type="datetime-local"] { width:100%; padding:6px; border-radius:6px; border:1px solid #e6e6e6; }
+button.control { background:#0f766e; color:white; border:0; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600; }
+button.ghost { background:transparent; border:1px solid #e6e6e6; color:#0f172a; padding:8px 10px; border-radius:8px; cursor:pointer; }
+.legend-box img { width:100%; display:block; border-radius:6px; border:1px solid #e6e6e6; margin-top:6px; }
+.row { display:flex; gap:8px; align-items:center; }
+#currentDate { font-size:12px; margin-bottom:4px; color:#0f172a; text-align:center; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="app-header">
+    <h1>🌙 NASA VIIRS SNPP : Lumières Nocturnes Capturées depuis l’Espace</h1>
+  </header>
+
+  <div id="map"></div>
+
+  <aside class="panel">
+    <div class="section-title">Sélection temporelle</div>
+    <label>Choisir date/heure (UTC)</label>
+    <input id="datetime" type="datetime-local">
+
+    <div id="currentDate"></div> <!-- Date affichée au-dessus du curseur -->
+    <input id="timeSlider" type="range" min="0" max="0" value="0">
+
+    <div class="row" style="margin-top:8px;">
+      <button id="btnPlay" class="control">▶️ Lecture</button>
+      <button id="btnPause" class="ghost">⏸️ Pause</button>
+    </div>
+
+    <div class="section-title" style="margin-top:10px;">Fond carto & Opacité</div>
+    <select id="basemap">
+      <option value="osm" selected>OSM sans labels</option>
+      <option value="esri">ESRI World Imagery</option>
+    </select>
+    <label style="margin-top:8px;">Opacité</label>
+    <input id="opacity" type="range" min="0" max="1" step="0.05" value="1">
+
+    <div class="section-title" style="margin-top:10px;">Légende</div>
+    <div class="legend-box">
+      <img id="legendImg" src="https://gibs.earthdata.nasa.gov/legends/VIIRS_SNPP_DayNightBand_ENCC_H.png" alt="Légende VIIRS_SNPP">
+    </div>
+  </aside>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const WMS_URL = 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
+const LAYER_NAME = 'VIIRS_SNPP_DayNightBand';
+const STEP_MIN = 60;
+const TIME_START = new Date("2012-03-01T00:00:00Z");
+const TIME_END = new Date("2025-08-24T00:00:00Z");
+
+// Générer tableau de temps
+function buildTimes(start,end,stepMin){
+  const arr=[]; let t=new Date(start);
+  while(t<=end){ arr.push(new Date(t)); t=new Date(t.getTime()+stepMin*60000);}
+  return arr;
+}
+const times = buildTimes(TIME_START,TIME_END,STEP_MIN);
+
+// Dernière image
+let index = times.length-1;
+
+// Helpers
+function isoUTC(dt){ return dt.toISOString().replace('.000Z','Z'); }
+function toLocalInput(dt){ const local=new Date(dt.getTime()-dt.getTimezoneOffset()*60000); return local.toISOString().slice(0,16); }
+function fromInputToUTC(val){ const local=new Date(val); return new Date(local.getTime()+local.getTimezoneOffset()*60000); }
+
+// Map & basemaps
+const map = L.map('map',{preferCanvas:true}).setView([0,20],3.5);
+const baseOSM = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{attribution:'© Moustapha Farah'});
+const baseESRI = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri'});
+baseOSM.addTo(map);
+
+// WMS layer
+let wms = L.tileLayer.wms(WMS_URL,{
+  layers:LAYER_NAME, format:'image/png', transparent:true,
+  time: isoUTC(times[index]), opacity: parseFloat(document.getElementById('opacity').value)
+}).addTo(map);
+
+// Mettre à jour couche
+function updateLayer(){
+  if(wms) map.removeLayer(wms);
+  wms = L.tileLayer.wms(WMS_URL,{
+    layers:LAYER_NAME, format:'image/png', transparent:true,
+    time: isoUTC(times[index]), opacity: parseFloat(document.getElementById('opacity').value)
+  }).addTo(map);
+  document.getElementById('currentDate').textContent = times[index].toISOString().slice(0,16).replace('T',' ');
+}
+
+// Basemap switch
+document.getElementById('basemap').addEventListener('change',e=>{
+  const val=e.target.value;
+  map.eachLayer(l=>{ if(l!==wms) map.removeLayer(l); });
+  if(val==='osm') baseOSM.addTo(map);
+  else if(val==='esri') baseESRI.addTo(map);
+});
+
+// Opacité
+document.getElementById('opacity').addEventListener('input',()=>{ if(wms) wms.setOpacity(parseFloat(document.getElementById('opacity').value)); });
+
+// Calendrier
+const datetimeInput = document.getElementById('datetime');
+datetimeInput.value = toLocalInput(times[index]);
+datetimeInput.addEventListener('change',()=>{
+  try{
+    const utc = fromInputToUTC(datetimeInput.value);
+    const snapped = Math.round((utc.getTime()-TIME_START.getTime())/(STEP_MIN*60000));
+    index = Math.min(times.length-1, Math.max(0, snapped));
+    slider.value = index;
+    updateLayer();
+  }catch(e){console.warn(e);}
+});
+
+// Curseur temporel
+const slider = document.getElementById('timeSlider');
+slider.max = times.length-1;
+slider.value = index;
+slider.addEventListener('input',()=>{
+  index=parseInt(slider.value);
+  updateLayer();
+});
+
+// Lecture automatique
+let intervalId = null;
+document.getElementById('btnPlay').addEventListener('click',()=>{
+  if(intervalId) return;
+  intervalId = setInterval(()=>{
+    index = (index+1)%times.length;
+    slider.value = index;
+    datetimeInput.value = toLocalInput(times[index]);
+    updateLayer();
+  }, 1000);
+});
+document.getElementById('btnPause').addEventListener('click',()=>{
+  if(intervalId){ clearInterval(intervalId); intervalId=null; }
+});
+
+// Initialisation
+updateLayer();
+</script>
+</body>
+</html>
