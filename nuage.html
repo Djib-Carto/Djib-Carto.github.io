@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<title>Nuages Afrique – NASA MODIS</title>
+<title>Nuages Monde – NASA GIBS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
@@ -19,7 +19,6 @@ header.app-header h1 { margin:0; font-size:16px; color:#0f172a; }
 header.app-header p { margin:0; color:#475569; font-size:13px; }
 
 #map { grid-column:1/2; grid-row:2/3; height: calc(100% - 16px); margin: 8px; border-radius: 8px; overflow:hidden; box-shadow: 0 6px 18px rgba(15,23,42,0.08); }
-
 aside.panel { grid-column:2/3; grid-row:2/3; margin:8px; background:white; border-radius:10px; padding:12px; box-shadow:0 6px 18px rgba(15,23,42,0.06); display:flex; flex-direction:column; gap:10px; overflow:auto; }
 
 .section-title { font-weight:600; font-size:13px; color:#0f172a; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
@@ -28,10 +27,6 @@ button.control { background:var(--accent); color:white; border:0; padding:8px 10
 button.ghost { background:transparent; border:1px solid #e6e6e6; color:#0f172a; padding:8px 10px; border-radius:8px; cursor:pointer; }
 input[type="range"] { width:100%; }
 .small { font-size:12px; color:#475569; }
-.info-box { background:#f8fafc; border:1px solid #e6e6e6; padding:8px; border-radius:8px; font-size:13px; color:#0f172a; }
-.row { display:flex; gap:8px; align-items:center; }
-label { font-size:12px; color:#475569; }
-footer.small-note { font-size:12px; color:#64748b; margin-top:6px; }
 
 @media (max-width:900px){
   #app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;}
@@ -44,8 +39,8 @@ footer.small-note { font-size:12px; color:#64748b; margin-top:6px; }
 <div id="app">
 <header class="app-header">
   <div style="display:flex;flex-direction:column">
-    <h1>Observation globale des nuages – Satellite MODIS Terra (NASA) depuis 2000 </h1>
-
+    <h1>Nuages Monde – NASA GIBS</h1>
+    <p>Source: NASA GIBS WMS — couche <code>MODIS_Terra_CorrectedReflectance_TrueColor</code></p>
   </div>
 </header>
 
@@ -95,7 +90,6 @@ footer.small-note { font-size:12px; color:#64748b; margin-top:6px; }
     <input id="opacity" type="range" min="0" max="1" step="0.05" value="1">
 
   </div>
-  <div class="info-box" id="infoBox">Clique sur la carte pour interroger les nuages (GetFeatureInfo). </div>
 </aside>
 </div>
 
@@ -103,8 +97,8 @@ footer.small-note { font-size:12px; color:#64748b; margin-top:6px; }
 <script>
 /* ------------------ Config temporelle ------------------ */
 const TIME_START = new Date("2000-03-31T05:00:00Z"); // début 2000
-const TIME_END   = new Date(); // aujourd’hui
-const STEP_MIN   = 24*60; // pas 1 jour
+const TIME_END   = new Date(); // par défaut aujourd'hui
+const STEP_MIN   = 15; // minutes
 
 function buildTimes(start,end,stepMin){
   const arr=[]; let t=new Date(start);
@@ -113,18 +107,13 @@ function buildTimes(start,end,stepMin){
 }
 const times=buildTimes(TIME_START,TIME_END,STEP_MIN);
 
-/* ------------------ Helpers ------------------ */
 function isoUTC(dt){return dt.toISOString().replace('.000Z','Z');}
 function toLocalDatetimeInputValue(dt){ const local=new Date(dt.getTime()-dt.getTimezoneOffset()*60000); return local.toISOString().slice(0,16); }
 function fromDatetimeInputToUTC(val){ const local=new Date(val); return new Date(local.getTime()+local.getTimezoneOffset()*60000); }
 
-/* ------------------ Carte ------------------ */
-const map=L.map('map',{preferCanvas:true, zoomControl:false}).setView([10,20],3.5);
-
-// Zoom + / - à gauche
-L.control.zoom({ position:'topleft' }).addTo(map);
-
-const baseOSM=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{ attribution:'© Moustapha Farah' }).addTo(map);
+/* ------------------ Carte & couches ------------------ */
+const map=L.map('map',{preferCanvas:true}).setView([0,20],3.5);
+const baseOSM=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',{ attribution:'&copy; CARTO & OSM' }).addTo(map);
 const WMS_URL='https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
 const LAYER_NAME='MODIS_Terra_CorrectedReflectance_TrueColor';
 
@@ -138,11 +127,11 @@ function createWMSLayer(timeISO){
   });
 }
 
-/* ------------------ UI ------------------ */
-let index = times.length-1; // par défaut aujourd’hui
-let wms = createWMSLayer(isoUTC(times[index]));
+let index=0;
+let wms=createWMSLayer(isoUTC(times[index]));
 wms.addTo(map);
 
+/* ------------------ UI ------------------ */
 const btnPlay=document.getElementById('btnPlay');
 const btnPause=document.getElementById('btnPause');
 const btnStepBack=document.getElementById('btnStepBack');
@@ -154,38 +143,27 @@ const labelStart=document.getElementById('timeStartLabel');
 const labelEnd=document.getElementById('timeEndLabel');
 const labelCurrent=document.getElementById('timeCurrentLabel');
 const opacityInput=document.getElementById('opacity');
-const infoBox=document.getElementById('infoBox');
 
 slider.max=times.length-1; slider.value=index;
-labelStart.textContent = isoUTC(times[0]).slice(0,10);
-labelEnd.textContent = isoUTC(times[times.length-1]).slice(0,10);
-labelCurrent.textContent = isoUTC(times[index]).slice(0,10);
-datetimeInput.value = toLocalDatetimeInputValue(times[index]);
+labelStart.textContent=isoUTC(times[0]).slice(0,16).replace('T',' ');
+labelEnd.textContent=isoUTC(times[times.length-1]).slice(0,16).replace('T',' ');
+labelCurrent.textContent=isoUTC(times[index]).slice(0,16).replace('T',' ');
+datetimeInput.value=toLocalDatetimeInputValue(times[index]);
 
-function updateUI(){
-  slider.value=index;
-  labelCurrent.textContent=isoUTC(times[index]).slice(0,10);
-  datetimeInput.value = toLocalDatetimeInputValue(times[index]);
-}
-
-function setTimeIndex(newIndex){
-  newIndex=Math.max(0,Math.min(times.length-1,newIndex));
-  index=newIndex;
-  if(wms) map.removeLayer(wms);
-  wms=createWMSLayer(isoUTC(times[index]));
-  wms.addTo(map);
-  updateUI();
-}
+function updateUI(){ slider.value=index; labelCurrent.textContent=isoUTC(times[index]).slice(0,16).replace('T',' '); datetimeInput.value=toLocalDatetimeInputValue(times[index]); }
+function setTimeIndex(newIndex){ newIndex=Math.max(0,Math.min(times.length-1,newIndex)); index=newIndex; if(wms) map.removeLayer(wms); wms=createWMSLayer(isoUTC(times[index])); wms.addTo(map); updateUI(); }
 
 btnStepBack.addEventListener('click',()=>setTimeIndex(index-1));
 btnStepFwd.addEventListener('click',()=>setTimeIndex(index+1));
 slider.addEventListener('input',()=>setTimeIndex(parseInt(slider.value,10)));
+
 datetimeInput.addEventListener('change',(e)=>{
   const utc=fromDatetimeInputToUTC(e.target.value);
   const snapped=new Date(Math.round((utc.getTime()-TIME_START.getTime())/(STEP_MIN*60000))*(STEP_MIN*60000)+TIME_START.getTime());
   const idx=Math.round((snapped.getTime()-TIME_START.getTime())/(STEP_MIN*60000));
   setTimeIndex(idx);
 });
+
 opacityInput.addEventListener('input',()=>{ if(wms) wms.setOpacity(parseFloat(opacityInput.value)); });
 
 let intervalId=null;
@@ -196,21 +174,6 @@ btnPlay.addEventListener('click',()=>{
 });
 btnPause.addEventListener('click',()=>{
   if(intervalId){ clearInterval(intervalId); intervalId=null; }
-});
-
-/* ------------------ GetFeatureInfo ------------------ */
-map.on('click',async(e)=>{
-  infoBox.textContent='Interrogation…';
-  const size=map.getSize();
-  const bounds=map.getBounds();
-  const sw=bounds.getSouthWest(), ne=bounds.getNorthEast();
-  const minx=sw.lng, miny=sw.lat, maxx=ne.lng, maxy=ne.lat;
-  const width=size.x, height=size.y;
-  const point=map.latLngToContainerPoint(e.latlng);
-  const x=Math.round(point.x), y=Math.round(point.y);
-  const params={SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetFeatureInfo',LAYERS:LAYER_NAME,QUERY_LAYERS:LAYER_NAME,STYLES:'',BBOX:[minx,miny,maxx,maxy].join(','),SRS:'EPSG:4326',WIDTH:width,HEIGHT:height,FORMAT:'image/png',INFO_FORMAT:'application/json',X:x,Y:y,TIME:isoUTC(times[index])};
-  const url=WMS_URL+'?'+Object.keys(params).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(params[k])).join('&');
-  try{ const resp=await fetch(url); const data=await resp.json(); infoBox.textContent=JSON.stringify(data); } catch(err){ infoBox.textContent='Aucune info disponible.'; }
 });
 
 setTimeIndex(index);
