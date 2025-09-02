@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>Surveillance météorologique avancée : Instabilité atmosphérique et hauteur des nuages en temps quasi réel</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+:root{--panel-w:360px;--gutter:12px;--accent:#0f766e;}
+html,body,#app{height:100%;margin:0;font-family:Inter,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+#app{display:grid;grid-template-columns:1fr var(--panel-w);grid-template-rows:auto 1fr;gap:var(--gutter);background:#f3f4f6;}
+header.app-header{grid-column:1/-1;display:flex;align-items:center;justify-content:center;padding:14px;background:linear-gradient(90deg,#ffffff,#fafafa);box-shadow:0 1px 2px rgba(0,0,0,0.03);}
+header.app-header h1{margin:0;font-size:18px;color:#0f172a;}
+#map{grid-column:1/2;grid-row:2/3;height:calc(100% - 16px);margin:8px;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,0.08);}
+aside.panel{grid-column:2/3;grid-row:2/3;margin:8px;background:white;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06);display:flex;flex-direction:column;gap:10px;overflow:auto;}
+.section-title{font-weight:600;font-size:13px;color:#0f172a;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.controls-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+button.control{background:var(--accent);color:white;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
+button.ghost{background:transparent;border:1px solid #e6e6e6;color:#0f172a;padding:8px 10px;border-radius:8px;cursor:pointer;}
+input[type="range"]{width:100%;}
+.small{font-size:12px;color:#475569;}
+label{font-size:12px;color:#475569;}
+.row{display:flex;gap:8px;align-items:center;}
+@media(max-width:900px){#app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;} aside.panel{grid-column:1/-1;grid-row:3/4;margin:8px;} #map{grid-column:1/-1;grid-row:2/3;margin:8px;height:60vh;}}
+.leaflet-control-legend{background:white;padding:10px;border-radius:8px;box-shadow:0 3px 8px rgba(0,0,0,0.2);}
+.leaflet-control-legend img{width:345px;display:block;}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="app-header"><h1>Surveillance météorologique : Instabilité atmosphérique et hauteur des nuages en temps quasi réel</h1></header>
+<div id="map"></div>
+<aside class="panel">
+<div class="section-title">Contrôles temporels</div>
+<div class="row" style="justify-content:space-between;">
+<div class="controls-row">
+<button id="btnStepBack" class="ghost">-15 min</button>
+<button id="btnPlayPause" class="ghost">Lecture</button>
+<button id="btnStepFwd" class="ghost">+15 min</button>
+</div>
+<div style="width:120px;">
+<label class="small">Sélection manuelle (UTC)</label>
+<input id="datetime" type="datetime-local" style="width:100%;padding:8px;border-radius:6px;border:1px solid #e6e6e6;">
+</div>
+</div>
+
+<div style="margin-top:10px;">
+<label class="small">Curseur temporel</label>
+<input id="timeSlider" type="range" min="0" max="0" step="1" value="0">
+<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748b;margin-top:4px;">
+<div id="timeStartLabel">—</div>
+<div id="timeCurrentLabel">—</div>
+<div id="timeEndLabel">—</div>
+</div>
+</div>
+
+<hr style="border:none;height:1px;background:#f1f5f9;margin:8px 0;">
+
+<div class="section-title">Couche</div>
+<div class="row">
+<input type="radio" name="layerRadio" id="layerK" checked><label for="layerK" class="small">Indice K</label>
+<input type="radio" name="layerRadio" id="layerC"><label for="layerC" class="small">Hauteur nuageuse</label>
+<input type="radio" name="layerRadio" id="layerRGB"><label for="layerRGB" class="small">RGB couleur géographique</label>
+</div>
+
+<div style="margin-top:8px;">
+<label class="small" id="labelOpacity">Opacité</label>
+<input id="opacityLayer" type="range" min="0" max="1" step="0.05" value="0.75">
+</div>
+
+<div style="margin-top:10px;">
+<label class="small">Fond cartographique / Satellite</label>
+<select id="basemap" style="width:100%;padding:6px;border-radius:6px;border:1px solid #e6e6e6;">
+<option value="esri" selected>Satellite ESRI</option>
+<option value="dark">Sombre</option>
+</select>
+</div>
+</aside>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// Carte
+const map = L.map('map',{preferCanvas:true}).setView([0,60],3.5);
+const baseESRI = L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',maxZoom:20});
+const baseDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; Carto',subdomains:'abcd',maxZoom:19});
+baseESRI.addTo(map);
+
+// Légende
+const legend = L.control({position:'bottomleft'});
+legend.onAdd = function(map){
+    const div = L.DomUtil.create('div','leaflet-control-legend');
+    div.innerHTML = '<img src="" id="legendImg">';
+    return div;
+};
+legend.addTo(map);
+const legendImg = document.getElementById('legendImg');
+
+// WMS
+const WMS_URL='https://view.eumetsat.int/geoserver/wms';
+const layersInfo = {
+    K:{name:'msg_iodc:gii_kindex'},
+    C:{name:'msg_fes:cth'},
+    RGB:{name:'mtg_fd:rgb_geocolour'}
+};
+const STEP_MIN=15;
+let activeLayer='K';
+let layerObj = {K:null,C:null,RGB:null};
+let timesObj = {};
+
+// Fonction utilitaire pour construire toutes les dates disponibles
+function buildTimes(start,end,step){
+    const arr=[]; let t=new Date(start);
+    while(t<=end){ arr.push(new Date(t)); t=new Date(t.getTime()+step*60000); }
+    return arr;
+}
+
+// Récupérer les dates depuis le WMS
+async function fetchLayerDates(layerName){
+    const url=WMS_URL+"?service=WMS&request=GetCapabilities&version=1.3.0";
+    const res=await fetch(url);
+    const xmlText=await res.text();
+    const parser=new DOMParser();
+    const xml=parser.parseFromString(xmlText,"text/xml");
+    const layers=xml.getElementsByTagName("Layer");
+    for(let i=0;i<layers.length;i++){
+        const nameTag=layers[i].getElementsByTagName("Name")[0];
+        if(nameTag && nameTag.textContent===layerName){
+            let dim=layers[i].getElementsByTagName("Dimension")[0];
+            if(!dim) dim=layers[i].getElementsByTagName("Extent")[0];
+            if(dim){
+                const values=dim.textContent.trim();
+                if(values.includes(",")) return values.split(",").map(d=>new Date(d));
+                if(values.includes("/")){
+                    const parts=values.split("/");
+                    const start=new Date(parts[0]);
+                    const end=new Date(parts[1]);
+                    const step=parseISO8601Step(parts[2] || "PT15M");
+                    return buildTimes(start,end,step);
+                }
+            }
+        }
+    }
+    return [];
+}
+function parseISO8601Step(stepStr){
+    if(stepStr.startsWith("PT")){
+        if(stepStr.includes("H")) return parseInt(stepStr.match(/(\d+)H/)[1])*60;
+        if(stepStr.includes("M")) return parseInt(stepStr.match(/(\d+)M/)[1]);
+    }
+    return 15;
+}
+
+// Créer layer WMS
+function createWMSLayer(name,date){
+    return L.tileLayer.wms(WMS_URL,{
+        layers:name,
+        format:'image/png',
+        transparent:true,
+        time:date.toISOString(),
+        version:'1.3.0',
+        crs:L.CRS.EPSG4326,
+        params:{'_unique':Date.now()}
+    });
+}
+
+// Afficher couche active
+function showLayer(){
+    Object.values(layerObj).forEach(l=>{if(l) map.removeLayer(l);});
+    let layer = createWMSLayer(layersInfo[activeLayer].name,timesObj[activeLayer][timesObj[activeLayer].length-1]);
+    layer.setOpacity(parseFloat(document.getElementById('opacityLayer').value));
+    layer.addTo(map);
+    layerObj[activeLayer]=layer;
+
+    // Légende
+    if(activeLayer==='RGB') legendImg.style.display='none';
+    else {
+        legendImg.style.display='block';
+        legendImg.src=WMS_URL+'?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&layer='+encodeURIComponent(layersInfo[activeLayer].name)+'&_unique='+Date.now();
+    }
+
+    // Curseur et datetime
+    const slider = document.getElementById('timeSlider');
+    const datetimeInput = document.getElementById('datetime');
+    const times = timesObj[activeLayer];
+    slider.max = times.length-1;
+    slider.value = times.length-1;
+    datetimeInput.value = times[times.length-1].toISOString().slice(0,16);
+    document.getElementById('timeStartLabel').innerText = times[0].toISOString().slice(0,16);
+    document.getElementById('timeEndLabel').innerText = times[times.length-1].toISOString().slice(0,16);
+    document.getElementById('timeCurrentLabel').innerText = times[times.length-1].toISOString().slice(0,16);
+}
+
+// Play/Pause
+let playInterval = null;
+function playAnimation(){
+    if(playInterval) {
+        clearInterval(playInterval);
+        playInterval=null;
+        document.getElementById('btnPlayPause').innerText='Lecture';
+    } else {
+        playInterval=setInterval(()=>{
+            const slider=document.getElementById('timeSlider');
+            const max=parseInt(slider.max);
+            let val=parseInt(slider.value);
+            val = (val<max)? val+1 : 0;
+            slider.value=val;
+            updateLayerTime(val);
+        },500);
+        document.getElementById('btnPlayPause').innerText='Pause';
+    }
+}
+
+// Mettre à jour couche avec curseur
+function updateLayerTime(index){
+    const date=timesObj[activeLayer][index];
+    if(layerObj[activeLayer]) layerObj[activeLayer].setParams({time:date.toISOString(),'_unique':Date.now()});
+    document.getElementById('datetime').value=date.toISOString().slice(0,16);
+    document.getElementById('timeCurrentLabel').innerText=date.toISOString().slice(0,16);
+}
+
+// Initialisation
+(async()=>{
+    timesObj.K = await fetchLayerDates(layersInfo.K.name);
+    timesObj.C = await fetchLayerDates(layersInfo.C.name);
+    timesObj.RGB = await fetchLayerDates(layersInfo.RGB.name);
+
+    showLayer();
+})();
+
+// Changement couche
+document.querySelectorAll('input[name="layerRadio"]').forEach(r=>{
+    r.addEventListener('change',e=>{
+        activeLayer = (e.target.id==='layerK')?'K':(e.target.id==='layerC')?'C':'RGB';
+        showLayer();
+    });
+});
+
+// Opacité
+document.getElementById('opacityLayer').addEventListener('input',()=>{if(layerObj[activeLayer]) layerObj[activeLayer].setOpacity(parseFloat(document.getElementById('opacityLayer').value));});
+
+// Changement fond
+document.getElementById('basemap').addEventListener('change',e=>{
+    [baseESRI,baseDark].forEach(l=>map.removeLayer(l));
+    if(e.target.value==='esri') baseESRI.addTo(map);
+    else baseDark.addTo(map);
+    showLayer(); 
+});
+
+// Curseur
+document.getElementById('timeSlider').addEventListener('input',e=>{
+    updateLayerTime(parseInt(e.target.value));
+});
+
+// Boutons
+document.getElementById('btnStepBack').addEventListener('click',()=>{
+    const slider = document.getElementById('timeSlider');
+    slider.value = Math.max(0,parseInt(slider.value)-1);
+    updateLayerTime(parseInt(slider.value));
+});
+document.getElementById('btnStepFwd').addEventListener('click',()=>{
+    const slider = document.getElementById('timeSlider');
+    slider.value = Math.min(parseInt(slider.max),parseInt(slider.value)+1);
+    updateLayerTime(parseInt(slider.value));
+});
+document.getElementById('btnPlayPause').addEventListener('click',playAnimation);
+
+// Label "Conçu par Moustapha Farah Guelleh"
+const authorLabel = L.control({position: 'bottomright'});
+
+authorLabel.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'author-label');
+    div.innerHTML = 'Conçu par Moustapha Farah Guelleh, Géomaticien & Cartographe';
+    div.style.background = 'rgba(255,255,255,0.7)';
+    div.style.padding = '4px 8px';
+    div.style.borderRadius = '6px';
+    div.style.fontSize = '12px';
+    div.style.color = '#0f172a';
+    div.style.boxShadow = '0 1px 3px rgba(0,0,0,0.3)';
+    return div;
+};
+
+authorLabel.addTo(map);
+
+</script>
+</body>
+</html>
