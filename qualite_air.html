@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌏 Suivi mondial de la qualité de l’air</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+  body, html { margin:0; padding:0; height:100%; font-family: 'Segoe UI', sans-serif; }
+  #map { width:100%; height:100%; }
+
+  .control-panel {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(255,255,255,0.95);
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1000;
+    min-width: 240px;
+    font-size: 14px;
+  }
+  .control-panel h3 {
+    margin-top:0; font-size:18px; color:#333; border-bottom:1px solid #ddd; padding-bottom:5px;
+  }
+  .control-panel label { display:block; margin-top:12px; font-weight:bold; }
+  .control-panel input[type=range] { width:100%; margin-top:5px; }
+  .control-panel select, .control-panel input[type=date] { width:100%; margin-top:5px; padding:4px; border-radius:4px; border:1px solid #ccc; }
+
+  .legend {
+    position: absolute;
+    bottom: 10px; left: 10px;
+    background: rgba(255,255,255,0.95);
+    padding: 12px 15px;
+    border-radius: 10px;
+    font-size:14px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    z-index:1000;
+    text-align: center;
+  }
+  .legend img { display:block; margin:8px auto; width:100%; }
+  .credit {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #555;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="control-panel">
+  <h3>🌏 Suivi mondial de la qualité de l’air</h3>
+
+  <label for="variableSelect">Variable :</label>
+  <select id="variableSelect">
+    <option value="pm25">Particules PM2.5</option>
+    <option value="co2">Dioxyde de carbone</option>
+    <option value="so2">Dioxyde de soufre</option>
+    <option value="ch4">Méthane</option>
+    <option value="co">Monoxyde de carbone</option>
+    <option value="no2">Dioxyde d'azote</option>
+    <option value="aod">Aérosols (AOD 550nm)</option>
+    <option value="o3">Ozone 850 hPa</option>
+  </select>
+
+  <label for="opacitySlider">Opacité :</label>
+  <input type="range" id="opacitySlider" min="0" max="100" value="70">
+
+  <label for="timeSlider">Date :</label>
+  <input type="date" id="timeSlider" value="2025-09-08">
+
+  <label for="hourSlider">Heure (3h intervals) : <span id="hourLabel">0h</span></label>
+  <input type="range" id="hourSlider" min="0" max="7" value="0" step="1">
+</div>
+
+<div class="legend" id="legend">
+  <strong>Légende :</strong><br>
+  <span id="legendLabel">PM2.5 (µg/m³)</span>
+  <img id="legendImg" src="https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_pm2p5&styles=sh_all_pm2p5_defra_daqi&width=350&height=50" alt="Légende">
+  <div class="credit">Conçu par Djib-Carto</div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+var map = L.map('map').setView([0, 20], 3);
+
+// Fond clair ESRI
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'ESRI',
+    maxZoom: 16
+}).addTo(map);
+
+var currentLayer;
+const hours = [0,3,6,9,12,15,18,21];
+
+const wmsVariables = {
+  pm25: {layer:'composition_pm2p5', style:'sh_all_pm2p5_defra_daqi', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_pm2p5&styles=sh_all_pm2p5_defra_daqi&width=350&height=50', label:'PM2.5 (µg/m³)'},
+  co2: {layer:'composition_co2_surface', style:'sh_Spectral_r_co2_surface', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_co2_surface&styles=sh_Spectral_r_co2_surface&width=350&height=50', label:'Dioxyde de carbone (CO₂, ppmv)'},
+  so2: {layer:'composition_so2_surface', style:'sh_all_so2_surface', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_so2_surface&styles=sh_all_so2_surface&width=350&height=50', label:'Dioxyde de soufre (SO₂, ppbv)'},
+  ch4: {layer:'composition_ch4_surface', style:'sh_Oranges1_ch4_surface', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_ch4_surface&styles=sh_Oranges1_ch4_surface&width=350&height=50', label:'Méthane (CH₄, ppbv)'},
+  co: {layer:'composition_co_surface', style:'sh_YlGnBu_co_upper', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_co_surface&styles=sh_YlGnBu_co_upper&width=350&height=50', label:'Monoxyde de carbone (CO, ppbv)'},
+  no2: {layer:'composition_no2_surface', style:'sh_all_no2_surface', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_no2_surface&styles=sh_all_no2_surface&width=350&height=50', label:'Dioxyde d\'azote (NO₂, ppbv)'},
+  aod: {layer:'composition_aod550', style:'sh_BuYlRd_aod', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_aod550&styles=sh_BuYlRd_aod&width=350&height=50', label:'Aérosols (AOD 550nm)'},
+  o3: {layer:'composition_o3_850hpa', style:'sh_all_o3_850hpa', legend:'https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_o3_850hpa&styles=sh_all_o3_850hpa&width=350&height=50', label:'Ozone 850 hPa (O₃, ppbv)'}
+};
+
+function updateLayer() {
+  const opacity = document.getElementById("opacitySlider").value / 100;
+  const date = document.getElementById("timeSlider").value;
+  const hourIndex = parseInt(document.getElementById("hourSlider").value);
+  const hour = hours[hourIndex];
+  document.getElementById("hourLabel").innerText = hour + "h";
+  const dateTime = date + "T" + String(hour).padStart(2,'0') + ":00:00Z";
+
+  const variable = document.getElementById("variableSelect").value;
+  const wmsVar = wmsVariables[variable];
+
+  if(currentLayer) map.removeLayer(currentLayer);
+
+  currentLayer = L.tileLayer.wms("https://eccharts.ecmwf.int/wms/?token=public", {
+    layers: wmsVar.layer,
+    styles: wmsVar.style,
+    format: 'image/png',
+    transparent: true,
+    version: '1.3.0',
+    attribution: "ECMWF / CAMS",
+    crs: L.CRS.EPSG4326,
+    opacity: opacity,
+    time: dateTime
+  }).addTo(map);
+
+  document.getElementById("legendImg").src = wmsVar.legend;
+  document.getElementById("legendLabel").innerText = wmsVar.label;
+}
+
+updateLayer();
+
+document.getElementById("opacitySlider").addEventListener("input", updateLayer);
+document.getElementById("timeSlider").addEventListener("change", updateLayer);
+document.getElementById("hourSlider").addEventListener("input", updateLayer);
+document.getElementById("variableSelect").addEventListener("change", updateLayer);
+</script>
+</body>
+</html>
