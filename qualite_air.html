@@ -70,7 +70,7 @@
   <input type="range" id="opacitySlider" min="0" max="100" value="70">
 
   <label for="timeSlider">Date :</label>
-  <input type="date" id="timeSlider" value="2025-09-08">
+  <input type="date" id="timeSlider">
 
   <label for="hourSlider">Heure (3h intervals) : <span id="hourLabel">0h</span></label>
   <input type="range" id="hourSlider" min="0" max="7" value="0" step="1">
@@ -135,6 +135,13 @@ function updateLayer() {
   document.getElementById("legendImg").src = wmsVar.legend;
   document.getElementById("legendLabel").innerText = wmsVar.label;
 }
+
+// 🔹 Mettre automatiquement la date du jour dans l’input
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const dd = String(today.getDate()).padStart(2, '0');
+document.getElementById("timeSlider").value = `${yyyy}-${mm}-${dd}`;
 
 updateLayer();
 
