@@ -45,6 +45,18 @@
     color: #555;
     font-style: italic;
   }
+
+  .time-display {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.95);
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    font-size: 14px;
+    z-index:1000;
+  }
 </style>
 </head>
 <body>
@@ -72,7 +84,7 @@
   <label for="timeSlider">Date :</label>
   <input type="date" id="timeSlider">
 
-  <label for="hourSlider">Heure (3h intervals) : <span id="hourLabel">0h</span></label>
+  <label for="hourSlider">Heure (3h intervalles) :</label>
   <input type="range" id="hourSlider" min="0" max="7" value="0" step="1">
 </div>
 
@@ -81,6 +93,10 @@
   <span id="legendLabel">PM2.5 (µg/m³)</span>
   <img id="legendImg" src="https://eccharts.ecmwf.int/wms/?token=public&request=GetLegend&layers=composition_pm2p5&styles=sh_all_pm2p5_defra_daqi&width=350&height=50" alt="Légende">
   <div class="credit">Conçu par Djib-Carto</div>
+</div>
+
+<div class="time-display">
+  Heure (3h intervalles, affichée en UTC+3) : <span id="hourLabel">3h</span>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -111,9 +127,14 @@ function updateLayer() {
   const opacity = document.getElementById("opacitySlider").value / 100;
   const date = document.getElementById("timeSlider").value;
   const hourIndex = parseInt(document.getElementById("hourSlider").value);
-  const hour = hours[hourIndex];
-  document.getElementById("hourLabel").innerText = hour + "h";
-  const dateTime = date + "T" + String(hour).padStart(2,'0') + ":00:00Z";
+  const hourUTC = hours[hourIndex];
+
+  // Affichage en UTC+3
+  const hourDisplay = (hourUTC + 3) % 24;
+  document.getElementById("hourLabel").innerText = hourDisplay + "h";
+
+  // Envoi WMS en UTC
+  const dateTime = date + "T" + String(hourUTC).padStart(2,'0') + ":00:00Z";
 
   const variable = document.getElementById("variableSelect").value;
   const wmsVar = wmsVariables[variable];
@@ -136,19 +157,18 @@ function updateLayer() {
   document.getElementById("legendLabel").innerText = wmsVar.label;
 }
 
-// 🔹 Mettre automatiquement la date du jour dans l’input
+// Date automatique
 const today = new Date();
-const yyyy = today.getFullYear();
-const mm = String(today.getMonth() + 1).padStart(2, '0');
-const dd = String(today.getDate()).padStart(2, '0');
-document.getElementById("timeSlider").value = `${yyyy}-${mm}-${dd}`;
+document.getElementById("timeSlider").value = today.toISOString().split('T')[0];
 
 updateLayer();
 
+// Listeners
 document.getElementById("opacitySlider").addEventListener("input", updateLayer);
 document.getElementById("timeSlider").addEventListener("change", updateLayer);
 document.getElementById("hourSlider").addEventListener("input", updateLayer);
 document.getElementById("variableSelect").addEventListener("change", updateLayer);
 </script>
+
 </body>
 </html>
