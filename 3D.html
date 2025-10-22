@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Custom ElevationLayer - Exaggerating elevation | Sample | ArcGIS Maps SDK for JavaScript</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.34/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.34/"></script>
+
+    <script type="module">
+      const [Map, SceneView, ElevationLayer, BaseElevationLayer, Basemap, TileLayer] =
+        await $arcgis.import([
+          "@arcgis/core/Map.js",
+          "@arcgis/core/views/SceneView.js",
+          "@arcgis/core/layers/ElevationLayer.js",
+          "@arcgis/core/layers/BaseElevationLayer.js",
+          "@arcgis/core/Basemap.js",
+          "@arcgis/core/layers/TileLayer.js",
+        ]);
+
+      //////////////////////////////////////////////
+      //   Create a subclass of BaseElevationLayer
+      //////////////////////////////////////////////
+
+      const ExaggeratedElevationLayer = BaseElevationLayer.createSubclass({
+        properties: {
+          exaggeration: 70,
+        },
+
+        load: function () {
+          this._elevation = new ElevationLayer({
+            url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/TopoBathy3D/ImageServer",
+          });
+
+          this.addResolvingPromise(
+            this._elevation.load().then(() => {
+              this.tileInfo = this._elevation.tileInfo;
+              this.spatialReference = this._elevation.spatialReference;
+              this.fullExtent = this._elevation.fullExtent;
+            }),
+          );
+          return this;
+        },
+
+        fetchTile: function (level, row, col, options) {
+          return this._elevation.fetchTile(level, row, col, options).then(
+            function (data) {
+              const exaggeration = this.exaggeration;
+              for (let i = 0; i < data.values.length; i++) {
+                data.values[i] = data.values[i] * exaggeration;
+              }
+              return data;
+            }.bind(this),
+          );
+        },
+      });
+
+      const basemap = new Basemap({
+        baseLayers: [
+          new TileLayer({
+            url: "https://tiles.arcgis.com/tiles/nGt4QxSblgDfeJn9/arcgis/rest/services/terrain_with_heavy_bathymetry/MapServer",
+            copyright:
+              'Bathymetry, topography and satellite imagery from <a href="https://visibleearth.nasa.gov/view_cat.php?categoryID=1484" target="_blank">NASA Visible Earth</a> | <a href="http://www.aag.org/global_ecosystems" target="_blank">World Ecological Land Units, AAG</a> | Oceans, glaciers and water bodies from <a href="https://www.naturalearthdata.com/" target="_blank">Natural Earth</a>',
+          }),
+        ],
+      });
+
+      const elevationLayer = new ExaggeratedElevationLayer();
+
+      const map = new Map({
+        basemap: basemap,
+        ground: {
+          layers: [elevationLayer],
+        },
+      });
+
+      const view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        alphaCompositingEnabled: true,
+        camera: {
+          position: [-55.039, 14.948, 19921223.3],
+          heading: 2.03,
+          tilt: 0.13,
+        },
+        environment: {
+          background: { type: "color", color: [255, 252, 244, 0] },
+          starsEnabled: false,
+          atmosphereEnabled: false,
+          lighting: { type: "virtual" },
+        },
+        constraints: { altitude: { min: 5000000 } },
+        popup: {
+          dockEnabled: true,
+          dockOptions: {
+            position: "top-right",
+            breakpoint: false,
+            buttonEnabled: false,
+          },
+          visibleElements: { collapseButton: false },
+        },
+      });
+
+      let exaggerated = true;
+
+      document.getElementById("exaggerate").addEventListener("click", (event) => {
+        if (exaggerated) {
+          map.ground = "world-elevation";
+          event.target.innerHTML = "Activer l’exagération";
+          exaggerated = false;
+        } else {
+          map.ground = { layers: [elevationLayer] };
+          event.target.innerHTML = "Désactiver l’exagération";
+          exaggerated = true;
+        }
+      });
+    </script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: radial-gradient(#12bff2, #0269a1);
+      }
+
+      #viewDiv canvas {
+        filter: saturate(1.2) drop-shadow(0 0 20px white);
+      }
+
+      .buttons {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+      }
+
+      .esri-button {
+        display: inline;
+        max-width: 200px;
+      }
+
+      /* Signature Moustapha Farah */
+      .signature {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        color: white;
+        font-size: 14px;
+        font-family: "Segoe UI", sans-serif;
+        opacity: 0.8;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px 8px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+
+    <div class="buttons">
+      <button id="exaggerate" class="esri-button">Désactiver l’exagération</button>
+    </div>
+
+    <div class="signature">Moustapha Farah</div>
+  </body>
+</html>
