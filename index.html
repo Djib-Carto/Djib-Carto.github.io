@@ -148,7 +148,7 @@
         <div id="avatar"></div>
         <div>
           <h1 class="text-3xl font-extrabold text-white">Moustapha Farah Guelleh</h1>
-          <p class="text-base text-slate-300 mt-1">Fondateur de Djib-Carto - Point focal UN-GGIM à Djibouti</p>
+          <p class="text-base text-slate-300 mt-1">Fondateur de Djib-Carto </p>
         </div>
       </div>
 <div class="mt-4 text-slate-200">
@@ -182,9 +182,10 @@
   <div class="realtime-apps">
     <a href="https://djib-carto.github.io/qualite_air" target="_blank" class="app-card glass anim-fade-up" style="transition-delay: 0.7s;"><span class="live-badge">LIVE</span><div class="icon">🌍</div><h3 class="text-accent text-md">Qualité de l’air</h3><p class="text-xs text-slate-300">Suivi mondial</p></a>
     <a href="https://djib-carto.github.io/meteo.html" target="_blank" class="app-card glass anim-fade-up" style="transition-delay: 0.8s;"><span class="live-badge">LIVE</span><div class="icon">☁️</div><h3 class="text-accent text-md">Météo</h3><p class="text-xs text-slate-300">Instabilité & nuages</p></a>
+    <a href="https://djib-carto.github.io/3D.html" target="_blank" class="app-card glass anim-fade-up" style="transition-delay: 0.9s;"><div class="icon">🗺️</div><h3 class="text-accent text-md">Visualisation 3D</h3><p class="text-xs text-slate-300">Exploration 3D</p></a>
   </div>
   
-  <div id="awardButton" class="glass anim-fade-up" style="transition-delay: 0.9s;" onclick="openAwardModal()">🏆</div>
+  <div id="awardButton" class="glass anim-fade-up" style="transition-delay: 1.0s;" onclick="openAwardModal()">🏆</div>
 </div>
 
 <div id="projectModal" class="modal-overlay" onclick="closeModal(this)">
@@ -320,7 +321,17 @@ const projects = {
       tools: ["DMSP", "VIIRS", "Google Earth Engine"]
     }
   ],
+  
+  /* --- SECTION MODIFIÉE CI-DESSOUS --- */
   "GeoAIModelisation": [
+    {
+      title: "Génération de Code GEE par IA (Gemini)", 
+      src: "1980929049410322441", 
+      type: "tweet", 
+      image: "cap_gemini.png", /* <-- AJOUT : Assurez-vous d'ajouter cette image thumbnail */
+      description: "Utilisation de GEE Assistant alimenté par Gemini pour générer du code (ex: NDVI) directement à partir de langage naturel. L'IA accélère l'analyse géospatiale.",
+      tools: ["Google Earth Engine", "Gemini", "GeoAI", "NDVI"]
+    },
     {
       title: "Super-Résolution d'Images par IA", src: "1951926487558336754", type: "tweet", image: "cap11.png",
       description: "Amélioration de la résolution d'images Sentinel-2 de 10m à 1m grâce au Deep Learning. Cette innovation décuple les capacités d'analyse pour l'agriculture, l'urbanisme et la surveillance.",
@@ -347,6 +358,8 @@ const projects = {
       tools: ["Google Earth Engine", "GHSL Dataset", "Analyse Historique"]
     }
   ],
+  /* --- FIN DE LA SECTION MODIFIÉE --- */
+  
   "CartoWebApps": [
     {
       title: "Bassins Versants de l'Afrique", src: "1779791154545938849", type: "tweet", image: "cap34.jpeg",
