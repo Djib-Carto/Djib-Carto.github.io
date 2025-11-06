@@ -34,15 +34,20 @@
       opacity: 0.8;
       z-index: 10;
     }
+
+    #globeViz {
+      width: 100vw;
+      height: 100vh;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
 </head>
 
 <body>
-  <div id="title">Visualisation 3D des volcans </div>
+  <div id="title">Visualisation 3D des volcans</div>
   <div id="globeViz"></div>
-  <div id="signature"> Moustapha Farah</div>
+  <div id="signature">© Moustapha Farah</div>
 
   <script type="module">
     import { scaleOrdinal } from 'https://esm.sh/d3-scale';
@@ -86,7 +91,8 @@
       .then(volcanoes => {
         myGlobe.pointsData(volcanoes)
           .labelsData(volcanoes);
-      });
+      })
+      .catch(err => console.error('Erreur de chargement du JSON :', err));
   </script>
 </body>
 </html>
