@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "section",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "nom": "Route houmed loita", "longuer": "30 metre" }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 43.145607239602327, 11.588669634074682 ], [ 43.150538532468602, 11.589359742998376 ], [ 43.150538532468602, 11.589359742998376 ] ] ] } }
+]
+}
