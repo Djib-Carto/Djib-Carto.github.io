@@ -1,0 +1,212 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f0f2f5;
+    overflow: hidden; 
+}
+
+#map {
+    height: 100vh;
+    width: 100%;
+    z-index: 1;
+}
+
+/* --- Panneau Latéral (Side Panel) --- */
+
+#side-panel {
+    position: absolute;
+    top: 0;
+    left: 0; 
+    height: 100%;
+    width: 350px;
+    background: #ffffff;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15); 
+    z-index: 1000;
+    transform: translateX(-350px); 
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+    display: flex;
+    flex-direction: column;
+}
+
+#side-panel.open {
+    transform: translateX(0); 
+}
+
+#panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#panel-header h3 {
+    margin: 0;
+    font-size: 1.4em;
+    color: #0078ff;
+    font-weight: 600;
+}
+
+#panel-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.tool-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #f0f0f0;
+}
+
+.tool-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.tool-section h4 {
+    color: #444;
+    font-size: 1.1em;
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #0078ff;
+    display: inline-block;
+}
+
+/* --- Bouton de Contrôle Général --- */
+
+.map-control {
+    position: absolute;
+    top: 15px;
+    left: 15px; 
+    right: auto;
+    background: #0078ff;
+    color: white;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 120, 255, 0.5);
+    font-size: 1.2em;
+    cursor: pointer;
+    z-index: 999;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.map-control:hover {
+    background: #005fcc;
+    transform: scale(1.05);
+}
+
+#side-panel.open + #toggle-panel-btn {
+    display: none;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: #777;
+    transition: color 0.2s;
+}
+
+.icon-btn:hover {
+    color: #0078ff;
+}
+
+/* --- Style de l'Input Fichier Amélioré --- */
+
+label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+input[type="file"] {
+    display: block;
+    margin-top: 0;
+    font-size: 0.95em;
+    width: 100%;
+}
+
+input[type="file"]::file-selector-button {
+    border: none;
+    background: linear-gradient(135deg, #0078ff, #00c6ff);
+    color: white;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+input[type="file"]::file-selector-button:hover {
+    box-shadow: 0 2px 8px rgba(0, 120, 255, 0.4);
+    opacity: 1;
+}
+
+/* --- Overrides Leaflet pour l'intégration (MiniMap, Locate) --- */
+
+/* Définir la position par défaut à gauche et ajouter une transition pour le mouvement par JS */
+.leaflet-control-container .leaflet-top.leaflet-left,
+.leaflet-control-container .leaflet-bottom.leaflet-left {
+    left: 15px !important;
+    transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Cacher le toggle par défaut du layer control, car on l'intègre */
+.leaflet-control-layers-toggle {
+    display: none !important;
+}
+
+.leaflet-control-layers {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+.leaflet-control-layers-list {
+    margin-top: 5px;
+}
+
+.leaflet-control-layers label {
+    font-weight: normal;
+    padding: 5px 0;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+.leaflet-control-layers label:hover {
+    background-color: #f5f5f5;
+}
+
+/* MiniMap Adjustments */
+.leaflet-minimap {
+    border: 1px solid #ddd;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+}
+
+/* Style de l'erreur */
+#error-message {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #e65c5c;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    z-index: 2000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}

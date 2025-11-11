@@ -1,0 +1,39 @@
+{
+    "map": {
+        "center": [11.6, 43.15],
+        "zoom": 12,
+        "maxZoom": 19
+    },
+    "basemaps": [
+        {
+            "name": "Carto Light",
+            "url": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+            "attribution": "© CartoDB, © OpenStreetMap contributors",
+            "maxZoom": 19
+        },
+        {
+            "name": "Carto Dark",
+            "url": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+            "attribution": "© CartoDB, © OpenStreetMap contributors",
+            "maxZoom": 19
+        },
+        {
+            "name": "Satellite (ESRI)",
+            "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            "attribution": "Tiles © Esri",
+            "maxZoom": 19
+        }
+    ],
+    "layers": [
+        {
+            "id": "geojson_uploader",
+            "name": "Données Importées",
+            "type": "geojson",
+            "visible": true
+        }
+    ],
+    "tools": [
+        "geojson_upload",
+        "layer_switcher"
+    ]
+}

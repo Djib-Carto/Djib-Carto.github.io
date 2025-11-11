@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌍 DjibCarto Web App</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="error-message"></div>
+    <div id="map"></div>
+
+    <button id="toggle-panel-btn" class="map-control" aria-label="Ouvrir le panneau d'outils">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div id="side-panel">
+        <div id="panel-header">
+            <h3>🛰️ DjibCarto Viewer</h3>
+            <button id="close-panel-btn" class="icon-btn" aria-label="Fermer le panneau">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="panel-content">
+            <div id="geojson-panel" class="tool-section">
+                </div>
+            
+            <div id="layers-panel" class="tool-section">
+                <h4>Fonds de carte</h4>
+                </div>
+            
+            <div id="advanced-tools-note" class="tool-section">
+                <h4>Outils Avancés</h4>
+                <p>Les outils de géolocalisation et la carte miniature sont directement accessibles sur la carte.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js" defer></script> 
+</body>
+</html>
