@@ -119,13 +119,43 @@ html, body {
     color: #0078ff;
 }
 
-/* --- Style de l'Input Fichier Amélioré --- */
+/* --- Style de l'Input Fichier Amélioré (GeoJSON Upload) --- */
 
 label {
     display: block;
     font-weight: 500;
     color: #333;
     margin-bottom: 8px;
+}
+
+/* Style général pour les boutons de chargement GeoJSON */
+.geojson-btn {
+    width: 100%; 
+    padding: 10px; 
+    background-color: #0078ff; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    transition: background 0.3s; 
+    font-weight: 600;
+    font-size: 0.95em;
+    margin-top: 5px;
+}
+
+.geojson-btn:hover:not([disabled]) {
+    background-color: #005fcc !important;
+}
+
+.geojson-btn:active:not([disabled]) {
+    background-color: #004c99 !important;
+}
+
+.geojson-btn[disabled] {
+    background-color: #ccc !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    color: #666 !important;
 }
 
 input[type="file"] {
@@ -151,13 +181,13 @@ input[type="file"]::file-selector-button:hover {
     opacity: 1;
 }
 
-/* --- Overrides Leaflet pour l'intégration (MiniMap, Locate) --- */
+/* --- Overrides Leaflet pour l'intégration (MiniMap, Locate, Scale) --- */
 
 /* Définir la position par défaut à gauche et ajouter une transition pour le mouvement par JS */
 .leaflet-control-container .leaflet-top.leaflet-left,
 .leaflet-control-container .leaflet-bottom.leaflet-left {
     left: 15px !important;
-    transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
 }
 
 /* Cacher le toggle par défaut du layer control, car on l'intègre */
@@ -193,6 +223,38 @@ input[type="file"]::file-selector-button:hover {
 .leaflet-minimap {
     border: 1px solid #ddd;
     box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+}
+
+/* Règle pour centrer le contrôle d'échelle en bas */
+.leaflet-control-scale {
+    /* Position absolue par rapport à la carte */
+    position: absolute !important;
+    
+    /* Positionne l'élément TRES BAS pour qu'il ne chevauche pas la carte miniature (MiniMap est à bottom: 20px + hauteur) */
+    bottom: 5px !important;
+    
+    /* Centrage initial (quand le panneau est fermé) */
+    left: 50% !important;
+    transform: translateX(-50%) !important; 
+    
+    z-index: 900; 
+    margin: 0 !important; 
+    transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Ajout d'une transition pour le décalage */
+    
+    /* Petit ajustement visuel de l'échelle */
+    padding: 2px 5px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+/* Décaler l'échelle lorsque le panneau est ouvert */
+#side-panel.open ~ .leaflet-control-container .leaflet-control-scale {
+    /* La carte visible commence à 350px.
+       L'échelle doit être centrée par rapport à (Largeur Totale - 350px).
+       Ceci décale le centre de la moitié de la largeur du panneau (175px).
+    */
+    left: calc(50% + 175px) !important;
 }
 
 /* Style de l'erreur */
