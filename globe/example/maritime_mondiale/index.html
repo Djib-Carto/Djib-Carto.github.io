@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>Séismes récents et plaques tectoniques – Moustapha Farah</title>
+  <title>Trafic Maritime Mondial – Moustapha Farah</title>
 
   <style>
     body {
@@ -12,10 +12,7 @@
       background: #000;
     }
 
-    #globeViz {
-      width: 100vw;
-      height: 100vh;
-    }
+    #globeViz { width: 100vw; height: 100vh; }
 
     /* Titre */
     .title {
@@ -23,219 +20,126 @@
       top: 15px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.65);
-      padding: 8px 16px;
-      border-radius: 10px;
-      color: #ffffff;
-      font-size: 18px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 20px;
+      border-radius: 12px;
+      color: #00f2ff;
+      font-size: 20px;
       font-weight: bold;
       z-index: 10;
       pointer-events: none;
       text-align: center;
-      white-space: nowrap;
+      box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
     }
 
     /* Crédit */
     .credit {
       position: absolute;
-      bottom: 10px;
+      bottom: 15px;
       right: 15px;
-      color: #ffffff;
-      font-size: 13px;
-      opacity: 0.75;
+      background: rgba(0,0,0,0.6);
+      padding: 5px 10px;
+      border-radius: 8px;
+      color: #00f2ff;
+      font-size: 12px;
+      opacity: 0.9;
       z-index: 10;
       pointer-events: none;
     }
 
-    /* Panneau de contrôle */
-    .controls {
-      position: absolute;
-      top: 65px;
-      left: 15px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 10px 12px;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 14px;
-      z-index: 10;
-    }
-
-    .controls label {
-      display: block;
-      cursor: pointer;
-      margin-bottom: 6px;
-    }
-
-    .controls input {
-      margin-right: 6px;
-      cursor: pointer;
-    }
-
-    /* Légende */
+    /* Légende fixe */
     .legend {
       position: absolute;
       bottom: 50px;
       left: 15px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 10px 12px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 12px;
       border-radius: 8px;
       color: #fff;
-      font-size: 13px;
+      font-size: 12px;
       z-index: 10;
+      max-width: 200px;
     }
 
-    .legend h4 {
-      margin: 0 0 6px 0;
-      font-size: 14px;
-      font-weight: bold;
-    }
+    .legend h4 { margin:0 0 6px 0; font-size:13px; font-weight:bold; }
+    .legend-item { display:flex; align-items:center; margin-bottom:4px; }
+    .legend-color { width:12px; height:12px; border-radius:50%; margin-right:8px; flex-shrink:0; }
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .legend-color {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 8px;
-      flex-shrink: 0;
-    }
-
-    .c6 { background: rgba(255,80,80,0.85); }
-    .c5 { background: rgba(255,160,80,0.8); }
-    .c4 { background: rgba(255,220,120,0.75); }
-    .c3 { background: rgba(120,200,255,0.65); }
+    .major { background: #ff4500; }
+    .middle { background: #ffdd00; }
+    .minor { background: #88ccee; }
+    .source { font-size: 10px; opacity: 0.7; margin-top: 6px; }
   </style>
 
   <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
 </head>
 
 <body>
-  <div id="globeViz"></div>
 
-  <!-- TITRE -->
-  <div class="title">
-    Séismes récents et plaques tectoniques (30 derniers jours)
-  </div>
+<div id="globeViz"></div>
 
-  <!-- Boutons ON / OFF -->
-  <div class="controls">
-    <label>
-      <input type="checkbox" id="togglePlates" checked>
-      Plaques tectoniques
-    </label>
-    <label>
-      <input type="checkbox" id="toggleQuakes" checked>
-      Séismes récents
-    </label>
-  </div>
+<div class="title">Trafic Maritime Mondial</div>
 
-  <!-- Légende dynamique -->
-  <div class="legend" id="legend">
-    <h4>Magnitude des séismes</h4>
-    <div class="legend-item">
-      <span class="legend-color c6"></span> ≥ 6.0 (fort)
-    </div>
-    <div class="legend-item">
-      <span class="legend-color c5"></span> 5.0 – 5.9
-    </div>
-    <div class="legend-item">
-      <span class="legend-color c4"></span> 4.0 – 4.9
-    </div>
-    <div class="legend-item">
-      <span class="legend-color c3"></span> &lt; 4.0
-    </div>
-  </div>
+<!-- Légende -->
+<div class="legend">
+  <h4>Type de route</h4>
+  <div class="legend-item"><span class="legend-color major"></span> Principale</div>
+  <div class="legend-item"><span class="legend-color middle"></span> Moyenne</div>
+  <div class="legend-item"><span class="legend-color minor"></span> Mineure</div>
+  <div class="source">Source : Routes maritimes – Shipping Lanes (GitHub)</div>
+</div>
 
-  <div class="credit">© Moustapha Farah</div>
+<div class="credit">© Moustapha Farah</div>
 
-  <script>
-    const globe = new Globe(document.getElementById('globeViz'))
-      .globeImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-dark.jpg')
-      .bumpImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png')
-      .backgroundImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png')
-      .atmosphereColor('#3a228a')
-      .atmosphereAltitude(0.2);
+<script>
+  const globe = new Globe(document.getElementById('globeViz'))
+    .globeImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-dark.jpg')
+    .bumpImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png')
+    .backgroundImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png')
+    .atmosphereColor('#1a4fff')
+    .atmosphereAltitude(0.2)
+    .enablePointerInteraction(true);
 
-    let tectonicPaths = [];
-    let earthquakes = [];
+  let shippingRoutes = [];
 
-    /* Plaques tectoniques */
-    fetch('https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json')
-      .then(r => r.json())
-      .then(data => {
-        data.features.forEach(({ geometry, properties }) => {
-          if (geometry.type === 'LineString') {
-            tectonicPaths.push({ coords: geometry.coordinates, properties });
-          } else if (geometry.type === 'MultiLineString') {
-            geometry.coordinates.forEach(coords => {
-              tectonicPaths.push({ coords, properties });
-            });
-          }
-        });
-
-        globe
-          .pathsData(tectonicPaths)
-          .pathPoints('coords')
-          .pathPointLat(p => p[1])
-          .pathPointLng(p => p[0])
-          .pathColor(() => '#ff4500')
-          .pathDashLength(0.05)
-          .pathDashGap(0.01)
-          .pathDashAnimateTime(7000)
-          .pathResolution(3);
+  // Routes maritimes
+  fetch('https://raw.githubusercontent.com/newzealandpaul/Shipping-Lanes/main/data/Shipping_Lanes_v1.geojson')
+    .then(r => r.json())
+    .then(data => {
+      data.features.forEach(({ geometry, properties }) => {
+        if (!geometry) return;
+        if (geometry.type === 'LineString') shippingRoutes.push({ coords: geometry.coordinates, properties });
+        else if (geometry.type === 'MultiLineString') geometry.coordinates.forEach(c => shippingRoutes.push({ coords: c, properties }));
       });
 
-    /* Séismes récents */
-    fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson')
-      .then(r => r.json())
-      .then(eqData => {
-        earthquakes = eqData.features
-          .filter(d => d.properties.mag !== null)
-          .map(d => ({
-            lat: d.geometry.coordinates[1],
-            lng: d.geometry.coordinates[0],
-            mag: d.properties.mag,
-            place: d.properties.place,
-            time: new Date(d.properties.time).toLocaleString()
-          }));
+      // Créer le flux dans les deux sens
+      const allRoutes = [
+        ...shippingRoutes,
+        ...shippingRoutes.map(r => ({ coords: [...r.coords].reverse(), properties: r.properties }))
+      ];
 
-        globe
-          .pointsData(earthquakes)
-          .pointLat(d => d.lat)
-          .pointLng(d => d.lng)
-          .pointAltitude(d => Math.min(d.mag / 80, 0.03))
-          .pointRadius(d => Math.min(Math.sqrt(d.mag) * 0.35, 1.4))
-          .pointColor(d =>
-            d.mag >= 6 ? 'rgba(255,80,80,0.85)' :
-            d.mag >= 5 ? 'rgba(255,160,80,0.8)' :
-            d.mag >= 4 ? 'rgba(255,220,120,0.75)' :
-                         'rgba(120,200,255,0.65)'
-          )
-          .pointLabel(d => `
-            <b>Séisme</b><br/>
-            📍 ${d.place}<br/>
-            Magnitude : ${d.mag}<br/>
-            Date : ${d.time}
-          `);
-      });
+      globe
+        .pathsData(allRoutes)
+        .pathPoints('coords')
+        .pathPointLat(p => p[1])
+        .pathPointLng(p => p[0])
+        .pathColor(d => d.properties.Type==='Major'? '#ff4500': d.properties.Type==='Middle'? '#ffdd00':'#88ccee')
+        .pathDashLength(0.08)
+        .pathDashGap(0.02)
+        .pathDashAnimateTime(8000)
+        .pathResolution(4)
+        .pathLabel(d => `<b>${d.properties.Type==='Major'?'Principale':d.properties.Type==='Middle'?'Moyenne':'Mineure'}</b>`);
+    });
 
-    /* ON / OFF + légende */
-    const legend = document.getElementById('legend');
+  // Ergonomie
+  const controls = globe.controls();
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.3;
+  controls.enableZoom = true;
+  controls.zoomSpeed = 0.5;
+  controls.enableRotate = true;
+  controls.rotateSpeed = 0.4;
+</script>
 
-    document.getElementById('togglePlates')
-      .addEventListener('change', e => {
-        globe.pathsData(e.target.checked ? tectonicPaths : []);
-      });
-
-    document.getElementById('toggleQuakes')
-      .addEventListener('change', e => {
-        globe.pointsData(e.target.checked ? earthquakes : []);
-        legend.style.display = e.target.checked ? 'block' : 'none';
-      });
-  </script>
 </body>
 </html>
