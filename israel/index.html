@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Israël : Opérations & Chronologie</title>
+  <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* =====================================================
+       BASE & UI
+    ===================================================== */
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #050505;
+      font-family: 'Rajdhani', sans-serif;
+      color: #eee;
+    }
+
+    /* Scrollbar personnalisée */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1a2e; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #666; }
+
+    /* =====================================================
+       TITRE PRINCIPAL (NOUVEAU)
+    ===================================================== */
+    #main-title {
+      position: absolute;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      text-align: center;
+      pointer-events: none; /* Permet de cliquer à travers */
+    }
+
+    #main-title h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #fff;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(0, 234, 255, 0.6);
+    }
+
+    #main-title p {
+      margin: 5px 0 0;
+      font-size: 14px;
+      color: #00eaff;
+      opacity: 0.8;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* =====================================================
+       LÉGENDE (Ajustée)
+    ===================================================== */
+    #overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      width: 240px;
+      padding: 20px;
+      background: rgba(10, 15, 30, 0.85);
+      backdrop-filter: blur(10px);
+      border-left: 3px solid #00eaff;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 0 20px rgba(0, 234, 255, 0.1);
+    }
+
+    #overlay h2 {
+      margin: 0 0 15px;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      margin-bottom: 8px;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      margin-right: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .war { color: #ff2a2a; }           
+    .air_strike { color: #ffaa00; }    
+    .assassination { color: #bd00ff; } 
+    .special_ops { color: #00eaff; }   
+
+    /* =====================================================
+       TABLEAU CHRONOLOGIQUE
+    ===================================================== */
+    #timeline {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 380px;
+      max-height: 55vh;
+      overflow-y: auto;
+      background: rgba(10, 15, 30, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      z-index: 900;
+      box-shadow: -5px 5px 20px rgba(0,0,0,0.6);
+    }
+
+    #timeline table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    #timeline thead {
+      position: sticky;
+      top: 0;
+      background: rgba(20, 25, 45, 1);
+      z-index: 2;
+    }
+
+    #timeline th {
+      text-align: left;
+      padding: 10px;
+      color: #8899ac;
+      font-size: 11px;
+      text-transform: uppercase;
+      border-bottom: 2px solid rgba(255,255,255,0.1);
+    }
+
+    #timeline td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #timeline tr:hover td {
+      background: rgba(0, 234, 255, 0.15);
+      color: #fff;
+    }
+    
+    .year-cell { font-weight: 700; color: #00eaff; }
+    .desc-cell { color: #ccc; }
+
+    .badge {
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: 1px solid currentColor;
+    }
+
+    /* =====================================================
+       CREDITS / FOOTER (NOUVEAU)
+    ===================================================== */
+    #footer {
+      position: absolute;
+      bottom: 15px;
+      left: 20px;
+      z-index: 1000;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      pointer-events: none;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    /* =====================================================
+       TOOLTIP GLOBE
+    ===================================================== */
+    .scene-tooltip {
+      background: rgba(0,0,0,0.9) !important;
+      border: 1px solid #00eaff;
+      border-radius: 4px;
+      padding: 8px 12px !important;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="main-title">
+    <h1>ISRAËL : SURVEILLANCE GLOBALE</h1>
+    <p>Chronologie des opérations & conflits</p>
+  </div>
+
+  <div id="overlay">
+    <h2>Légende</h2>
+    <div class="legend-item war"><span class="dot"></span> Guerres Majeures</div>
+    <div class="legend-item air_strike"><span class="dot"></span> Frappes Aériennes</div>
+    <div class="legend-item assassination"><span class="dot"></span> Éliminations Ciblées</div>
+    <div class="legend-item special_ops"><span class="dot"></span> Opérations Spéciales</div>
+  </div>
+
+  <div id="globeViz"></div>
+
+  <div id="timeline">
+    <table>
+      <thead>
+        <tr>
+          <th>Année</th>
+          <th>Cible</th>
+          <th>Détail</th>
+        </tr>
+      </thead>
+      <tbody id="timeline-body"></tbody>
+    </table>
+  </div>
+
+  <div id="footer">
+    @Moustapha Farah 2025
+  </div>
+
+  <script type="module">
+    // --- CONFIGURATION ---
+    const ISRAEL = { lat: 31.5, lng: 34.75 };
+    
+    const COLORS = {
+      war:           ['#ff2a2a', 'rgba(255, 42, 42, 0.5)'],
+      air_strike:    ['#ffaa00', 'rgba(255, 170, 0, 0.5)'],
+      assassination: ['#bd00ff', 'rgba(189, 0, 255, 0.5)'],
+      special_ops:   ['#00eaff', 'rgba(0, 234, 255, 0.5)']
+    };
+
+    // --- DONNÉES ---
+    const operations = [
+      { year: 1967, country: "Égypte/Syrie", lat: 29.5, lng: 33.5, type: "war", desc: "Guerre des Six Jours" },
+      { year: 1973, country: "Égypte/Syrie", lat: 30.04, lng: 31.23, type: "war", desc: "Guerre du Kippour" },
+      { year: 1982, country: "Liban", lat: 33.85, lng: 35.50, type: "war", desc: "Première Guerre du Liban" },
+      { year: 2006, country: "Liban", lat: 33.30, lng: 35.40, type: "war", desc: "Conflit Israël-Hezbollah" },
+      { year: 2023, country: "Gaza", lat: 31.40, lng: 34.35, type: "war", desc: "Glaives de Fer (Hamas)" },
+
+      { year: 1981, country: "Irak", lat: 33.20, lng: 44.40, type: "air_strike", desc: "Opéra : Réacteur Osirak" },
+      { year: 1985, country: "Tunisie", lat: 36.80, lng: 10.18, type: "air_strike", desc: "Jambe de Bois : QG OLP" },
+      { year: 2007, country: "Syrie", lat: 35.50, lng: 39.50, type: "air_strike", desc: "Verger : Réacteur Al-Kibar" },
+      { year: 2019, country: "Irak", lat: 34.00, lng: 43.00, type: "air_strike", desc: "Frappes bases milices" },
+      { year: 2024, country: "Yémen", lat: 14.80, lng: 42.95, type: "air_strike", desc: "Port Hodeïda (Houthis)" },
+      { year: 2024, country: "Iran", lat: 32.65, lng: 51.66, type: "air_strike", desc: "Riposte site radar (Ispahan)" },
+
+      { year: 1973, country: "Norvège", lat: 61.11, lng: 10.46, type: "assassination", desc: "Affaire de Lillehammer" },
+      { year: 1988, country: "Tunisie", lat: 36.85, lng: 10.20, type: "assassination", desc: "Abu Jihad (OLP)" },
+      { year: 1995, country: "Malte", lat: 35.93, lng: 14.37, type: "assassination", desc: "Fathi Shaqaqi" },
+      { year: 2008, country: "Syrie", lat: 33.51, lng: 36.27, type: "assassination", desc: "Imad Mughniyeh" },
+      { year: 2010, country: "EAU", lat: 25.25, lng: 55.30, type: "assassination", desc: "Mahmoud al-Mabhouh" },
+      { year: 2018, country: "Malaisie", lat: 3.13, lng: 101.68, type: "assassination", desc: "Ingénieur Fadi al-Batsh" },
+      { year: 2024, country: "Iran", lat: 35.68, lng: 51.38, type: "assassination", desc: "Ismail Haniyeh" },
+      { year: 2024, country: "Liban", lat: 33.89, lng: 35.50, type: "assassination", desc: "Nasrallah / Opération Bipers" },
+
+      { year: 1960, country: "Argentine", lat: -34.60, lng: -58.38, type: "special_ops", desc: "Capture d’Adolf Eichmann" },
+      { year: 1969, country: "France", lat: 49.63, lng: -1.62, type: "special_ops", desc: "Vedettes de Cherbourg" },
+      { year: 1976, country: "Ouganda", lat: 0.05, lng: 32.46, type: "special_ops", desc: "Raid d’Entebbe" },
+      { year: 1984, country: "Soudan", lat: 15.50, lng: 32.55, type: "special_ops", desc: "Opération Moïse" },
+      { year: 2018, country: "Iran", lat: 35.70, lng: 51.40, type: "special_ops", desc: "Vol archives nucléaires" }
+    ];
+
+    // --- GLOBE ---
+    const globe = Globe()(document.getElementById('globeViz'))
+      .globeImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg')
+      .backgroundImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png')
+      .atmosphereColor('#3a228a')
+      .atmosphereAltitude(0.15)
+      
+      .pointsData(operations)
+      .pointColor(d => COLORS[d.type][0])
+      .pointRadius(0.35)
+      .pointAltitude(0.01)
+      .pointLabel(d => `
+        <div style="text-align:center; font-weight:bold;">
+          <span style="color:${COLORS[d.type][0]}">${d.year}</span> | ${d.country}<br/>
+          <span style="font-weight:normal; opacity:0.8">${d.desc}</span>
+        </div>
+      `)
+
+      .arcsData(operations.filter(d => d.country !== "Gaza" && d.country !== "Liban"))
+      .arcStartLat(() => ISRAEL.lat)
+      .arcStartLng(() => ISRAEL.lng)
+      .arcEndLat(d => d.lat)
+      .arcEndLng(d => d.lng)
+      .arcColor(d => [COLORS[d.type][1], COLORS[d.type][0]])
+      .arcDashLength(0.4)
+      .arcDashGap(0.2)
+      .arcDashAnimateTime(2000)
+      .arcStroke(0.5)
+
+      .ringsData(operations)
+      .ringColor(d => d.type === 'war' ? 'rgba(255,0,0,0.5)' : COLORS[d.type][1])
+      .ringMaxRadius(3)
+      .ringPropagationSpeed(3)
+      .ringRepeatPeriod(1000);
+
+    globe.pointOfView({ lat: 25, lng: 40, altitude: 2.2 });
+    globe.controls().autoRotate = true;
+    globe.controls().autoRotateSpeed = 0.5;
+
+    // --- TABLEAU ---
+    const tbody = document.getElementById('timeline-body');
+    operations.sort((a, b) => b.year - a.year);
+
+    operations.forEach(op => {
+      const row = document.createElement('tr');
+      const color = COLORS[op.type][0];
+      
+      row.innerHTML = `
+        <td class="year-cell">${op.year}</td>
+        <td><span class="badge" style="color:${color}; border-color:${color}">${op.country.substring(0, 12)}</span></td>
+        <td class="desc-cell">${op.desc}</td>
+      `;
+      
+      row.addEventListener('click', () => {
+        globe.controls().autoRotate = false;
+        globe.pointOfView({ lat: op.lat, lng: op.lng, altitude: 0.8 }, 1500);
+        document.querySelectorAll('#timeline tr').forEach(r => r.style.background = 'transparent');
+        row.style.background = 'rgba(255,255,255,0.1)';
+      });
+
+      tbody.appendChild(row);
+    });
+
+    window.addEventListener('resize', () => {
+      globe.width(window.innerWidth);
+      globe.height(window.innerHeight);
+    });
+  </script>
+</body>
+</html>
