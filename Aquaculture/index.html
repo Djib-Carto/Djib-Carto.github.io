@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Aquaculture Mondiale · Focus Afrique | FAO SOFIA 2026</title>
+<meta name="description" content="Dashboard interactif mondial de l'aquaculture – 30 pays africains, comparaison continentale, données FAO SOFIA 2026."/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson@3/dist/topojson.min.js"></script>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<canvas id="ptl"></canvas>
+<div class="app">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <i data-lucide="fish" style="width:16px;height:16px;color:#020b18;stroke-width:2.5;"></i>
+    </div>
+    <div>
+      <h1>Plateforme Aquaculture · Focus Afrique</h1>
+      <p>Statistiques Comparatives · Rapport SOFIA 2026</p>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">141,6 Mt</div><div class="l">Production Mondiale</div></div>
+    <div class="kpi"><div class="v" style="color:var(--c1)">2,73 Mt</div><div class="l">Production Afrique</div></div>
+    <div class="kpi"><div class="v" style="color:var(--gold)">+7,8%/an</div><div class="l">Taux de Croissance (AF)</div></div>
+    <div class="kpi"><div class="v" style="color:var(--pur)">102,7 Mt</div><div class="l">Production Animale</div></div>
+    <div class="kpi"><div class="v" style="color:var(--org)">×6,0</div><div class="l">Facteur d'échelle (00→24)</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-monde" onclick="setTab('monde')">
+      <i data-lucide="globe" style="margin-right:5px;width:11px;height:11px;display:inline-block;vertical-align:middle;stroke-width:2.2;"></i>Monde
+    </button>
+    <button class="tab" id="tab-afrique" onclick="setTab('afrique')">
+      <i data-lucide="crosshairs" style="margin-right:5px;width:11px;height:11px;display:inline-block;vertical-align:middle;stroke-width:2.2;"></i>Afrique
+    </button>
+    <button class="tab" id="tab-cmp" onclick="toggleCmp()">
+      <i data-lucide="line-chart" style="margin-right:5px;width:11px;height:11px;display:inline-block;vertical-align:middle;stroke-width:2.2;"></i>Comparatifs
+    </button>
+    <button class="tab" id="tab-src" onclick="toggleSrc()">Sources</button>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- SIDEBAR -->
+  <aside class="sb">
+    <div class="ic" id="ic">
+      <h3 id="ic-name">Synthèse Régionale - Afrique</h3>
+      <div class="ic-g">
+        <div class="ic-s">
+          <div class="v" style="display:flex;align-items:center;gap:4px;">
+            <i data-lucide="boxes" style="color:var(--c2);opacity:.85;margin-right:2px;width:10px;height:10px;stroke-width:2.2;flex-shrink:0;"></i>
+            <span id="ic-prod">2,73 Mt</span>
+          </div>
+          <div class="l">Production 2024</div>
+        </div>
+        <div class="ic-s">
+          <div class="v" style="display:flex;align-items:center;gap:4px;">
+            <i data-lucide="trending-up" style="color:var(--gold);opacity:.85;margin-right:2px;width:10px;height:10px;stroke-width:2.2;flex-shrink:0;"></i>
+            <span id="ic-growth" style="color:var(--gold)">+7,8%/an</span>
+          </div>
+          <div class="l">Croissance</div>
+        </div>
+        <div class="ic-s">
+          <div class="v" style="display:flex;align-items:center;gap:4px;">
+            <i data-lucide="trophy" style="color:var(--mut);opacity:.85;margin-right:2px;width:10px;height:10px;stroke-width:2.2;flex-shrink:0;"></i>
+            <span id="ic-rank" style="color:var(--mut)">—</span>
+          </div>
+          <div class="l">Rang Afrique</div>
+        </div>
+        <div class="ic-s">
+          <div class="v" style="display:flex;align-items:center;gap:4px;">
+            <i data-lucide="pie-chart" style="color:var(--org);opacity:.85;margin-right:2px;width:10px;height:10px;stroke-width:2.2;flex-shrink:0;"></i>
+            <span id="ic-share" style="color:var(--org)">~1,93%</span>
+          </div>
+          <div class="l">Part mondiale</div>
+        </div>
+      </div>
+      <div class="ic-tl">Espèces phares</div>
+      <div class="tags" id="ic-species">
+        <span class="tag">Tilapia du Nil</span><span class="tag">Silure</span>
+        <span class="tag">Carpe</span><span class="tag">Crevettes</span>
+      </div>
+      <div class="ic-note" id="ic-note">Données : FAO SOFIA 2026 – Table 1.2 · FishStat 2026 · Cliquez un pays pour ses détails</div>
+    </div>
+
+    <div class="sec-lbl">Classement des Producteurs</div>
+    <div class="c-list" id="c-list"></div>
+
+    <div style="margin-top:auto;font-size:.52rem;color:var(--mut);text-align:center;padding:.5rem 0;border-top:1px solid rgba(0,200,255,0.06);letter-spacing:.05em;">
+      Réalisé par Moustapha Farah · 2026
+    </div>
+  </aside>
+
+  <!-- MAP AREA -->
+  <div class="map-wrap">
+    <!-- Attribution Overlay -->
+    <div style="position:absolute;bottom:8px;right:10px;font-size:.54rem;color:var(--mut);background:rgba(1,5,16,0.78);padding:.18rem .45rem;border-radius:4px;border:1px solid rgba(0,200,255,0.08);pointer-events:none;z-index:50;letter-spacing:.05em;font-family:'Outfit',sans-serif;">
+      Réalisé par Moustapha Farah · 2026
+    </div>
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="tb-b" id="zi" title="Zoom +">＋</button>
+      <button class="tb-b" id="zo" title="Zoom −">－</button>
+      <button class="tb-b" id="zr" title="Réinitialiser">⊙</button>
+      <div class="tb-sep"></div>
+      <div class="tb-view-badge" id="view-badge">🌑 Vue Afrique – labels visibles</div>
+      <div class="tb-hint" id="tb-hint">🖱 Survolez ou cliquez un pays · Molette = zoom · Glisser = naviguer</div>
+    </div>
+
+    <!-- Legend horizontal strip -->
+    <div class="leg-strip">
+      <span style="font-size:.54rem;color:var(--mut);font-weight:600;flex-shrink:0;">Légende ·</span>
+      <div class="ls-item"><div class="ls-dot" style="background:#00ffcc;box-shadow:0 0 5px #00ffcc66;"></div><div><div class="ls-lbl" style="color:#00ffcc;">&gt; 1 000 000 t</div><div class="ls-sub">Leader continental</div></div></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><div class="ls-dot" style="background:#00d4ff;box-shadow:0 0 5px #00d4ff55;"></div><div><div class="ls-lbl" style="color:#00d4ff;">100 000 – 1 000 000 t</div><div class="ls-sub">Producteur majeur</div></div></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><div class="ls-dot" style="background:#ffc947;box-shadow:0 0 4px #ffc94744;"></div><div><div class="ls-lbl" style="color:#ffc947;">10 000 – 100 000 t</div><div class="ls-sub">Producteur émergent</div></div></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><div class="ls-dot" style="background:#ff7b35;"></div><div><div class="ls-lbl" style="color:#ff7b35;">1 000 – 10 000 t</div><div class="ls-sub">Secteur débutant</div></div></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><div class="ls-dot" style="background:#ff3d6e;"></div><div><div class="ls-lbl" style="color:#ff3d6e;">&lt; 1 000 t</div><div class="ls-sub">Embryonnaire</div></div></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><div class="ls-dot" style="background:rgba(0,130,100,0.25);border:1px solid rgba(0,200,150,0.2);"></div><div class="ls-lbl" style="color:var(--mut);">Afrique (non documenté)</div></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><div class="ls-dot" style="background:rgba(15,40,75,0.5);"></div><div class="ls-lbl" style="color:var(--mut);">Reste du monde</div></div>
+      <div class="ls-sep"></div>
+      <span style="font-size:.52rem;color:var(--mut);font-style:italic;flex-shrink:0;">Sources : FAO FishStat 2024 · SOFIA 2026</span>
+    </div>
+
+    <svg id="map-svg">
+      <defs>
+        <filter id="glow" x="-35%" y="-35%" width="170%" height="170%">
+          <feGaussianBlur stdDeviation="2.4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="bg-g" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#071424"/>
+          <stop offset="100%" stop-color="#020810"/>
+        </radialGradient>
+        <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r=".65" fill="rgba(0,200,255,0.07)"/>
+        </pattern>
+      </defs>
+      <rect fill="url(#bg-g)" width="100%" height="100%"/>
+      <rect fill="url(#dots)" width="100%" height="100%" pointer-events="none"/>
+      <g id="map-g"></g>
+      <g id="labels-g"></g>
+    </svg>
+
+    <!-- COMPARISON PANEL -->
+    <div id="cmp">
+      <div class="cmp-h">
+        <h2>Analyse Comparative Continentale</h2>
+        <button class="cmp-cls" onclick="toggleCmp()">✕</button>
+      </div>
+      <div class="cmp-s">
+        <div class="cmp-st">Afrique vs Monde · Animaux aquatiques 2024</div>
+        <div class="af-vs">
+          <div class="av-card"><div class="v" style="color:var(--c1)">2,42 Mt</div><div class="l">Afrique prod.</div></div>
+          <div class="av-card"><div class="v" style="color:var(--c2)">102,7 Mt</div><div class="l">Monde prod.</div></div>
+          <div class="av-card"><div class="v" style="color:var(--gold)">+7,8%</div><div class="l">Crois. Afrique/an</div></div>
+          <div class="av-card"><div class="v" style="color:var(--mut)">+4,9%</div><div class="l">Crois. Monde/an</div></div>
+          <div class="av-card"><div class="v" style="color:var(--grn)">~2,36%</div><div class="l">Part Afrique</div></div>
+          <div class="av-card"><div class="v" style="color:var(--org)">×6,0</div><div class="l">Mult. 2000→2024</div></div>
+        </div>
+      </div>
+      <div class="cmp-s">
+        <div class="cmp-st">Production par continent – Animaux & Algues 2024</div>
+        <div class="cb-list" id="cb-list"></div>
+      </div>
+      <div class="cmp-s">
+        <div class="cmp-st">Top 10 producteurs mondiaux 2024</div>
+        <table class="top-tbl"><thead><tr><th>#</th><th>Pays</th><th>Prod.</th><th>Part</th><th></th></tr></thead>
+        <tbody id="top-body"></tbody></table>
+      </div>
+      <div class="cmp-s">
+        <div class="cmp-st">Répartition Afrique par région 2024</div>
+        <div class="cb-list" id="af-regs"></div>
+      </div>
+      <div class="cmp-s">
+        <div class="cmp-st">Faits Marquants (SOFIA 2026)</div>
+        <div class="fact-box">
+          • <b>Seuil historique :</b> Premier franchissement du cap des 100 Mt pour les animaux aquatiques d'élevage (102,7 Mt en 2024).<br/>
+          • <b>Dynamique régionale :</b> L'Afrique affiche un taux de croissance annuel moyen de +7,8%, soit le rythme le plus élevé hors Asie.<br/>
+          • <b>Concentration géographique :</b> L'Égypte concentre 66,1% de la production animale africaine à elle seule (1,60 Mt).<br/>
+          • <b>Hégémonie asiatique :</b> L'Asie représente 91,8% de la production mondiale combinée, portée par la Chine (57,6 Mt, soit 56,1%).<br/>
+          • <b>Sénégal :</b> Le pays présente un potentiel estuarien et côtier important pour diversifier sa production (huîtres, tilapia).<br/>
+          • <b>Horizon 2050 :</b> Un quadruplement de la production continentale est requis pour satisfaire les besoins nutritionnels de la population.
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCES PANEL -->
+    <div id="src-panel">
+      <div class="cmp-h">
+        <h2>Sources</h2>
+        <button class="cmp-cls" onclick="toggleSrc()">✕</button>
+      </div>
+      <div class="cmp-s">
+        <div class="cmp-st">Publication Principale</div>
+        <div class="src-list" style="padding:0;">
+          <a class="src-item" href="https://enaca.org/enclosure/?id=1496" target="_blank" style="margin-bottom:.4rem;">
+            <div class="src-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;color:var(--c2);">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <div class="src-txt">
+              <div class="src-name">FAO SOFIA 2026 (Rapport principal)</div>
+              <div class="src-desc">Version intégrale du rapport mondial "The State of World Fisheries and Aquaculture 2026" de l'Organisation des Nations Unies pour l'alimentation et l'agriculture (FAO).</div>
+              <div class="src-link">enaca.org · Document PDF ID 1496</div>
+            </div>
+          </a>
+        </div>
+      </div>
+      <div class="cmp-s">
+        <div class="cmp-st">Bases de données & rapports régionaux</div>
+        <div class="src-list" style="padding:0; display:flex; flex-direction:column; gap:.4rem;">
+          <a class="src-item" href="https://www.fao.org/fishery/en/fishstat" target="_blank">
+            <div class="src-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;color:var(--c2);">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <div class="src-txt">
+              <div class="src-name">FAO FishStat Database</div>
+              <div class="src-desc">Base de données statistiques pour la production aquacole de 1950 à 2024.</div>
+              <div class="src-link">fao.org/fishery/en/fishstat</div>
+            </div>
+          </a>
+          <a class="src-item" href="https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Fisheries+and+Aquaculture+Annual_Dakar_Senegal_07-07-2023" target="_blank">
+            <div class="src-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;color:var(--c2);">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <div class="src-txt">
+              <div class="src-name">USDA GAIN Report (Afrique de l'Ouest)</div>
+              <div class="src-desc">Rapport annuel sur les pêcheries et l'aquaculture (Sénégal, Égypte) par l'USDA Foreign Agricultural Service.</div>
+              <div class="src-link">apps.fas.usda.gov · FAS Dakar</div>
+            </div>
+          </a>
+          <a class="src-item" href="https://www.worldfishcenter.org/pages/aquaculture-in-africa.html" target="_blank">
+            <div class="src-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;color:var(--c2);">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <div class="src-txt">
+              <div class="src-name">WorldFish / AU-IBAR Portal</div>
+              <div class="src-desc">Profils de développement de l'aquaculture et stratégies régionales en Afrique subsaharienne.</div>
+              <div class="src-link">worldfishcenter.org</div>
+            </div>
+          </a>
+          <a class="src-item" href="https://tradingeconomics.com/country-list/fish-production?continent=africa" target="_blank">
+            <div class="src-icon">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;color:var(--c2);">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </div>
+            <div class="src-txt">
+              <div class="src-name">Trading Economics (Indicateurs Sectoriels)</div>
+              <div class="src-desc">Indicateurs de production halieutique et séries temporelles de la production de poisson en Afrique.</div>
+              <div class="src-link">tradingeconomics.com/africa</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GLOBAL BAR -->
+<div class="glob-bar">
+  <div class="gb-lbl">Production mondiale 2024<br><span style="color:var(--c2);font-size:.6rem;font-weight:700;">(Animaux + Algues)</span></div>
+  <div class="gb-grid">
+    <div class="gb-card" style="--c:#0095d5;">
+      <div class="gb-card-hdr"><span>🌏 Asie</span><strong>91.8%</strong></div>
+      <div class="gb-card-bar"><div class="gb-card-fill" style="width:91.8%"></div></div>
+      <div class="gb-card-val">130,0 Mt</div>
+    </div>
+    <div class="gb-card" style="--c:#27ae60;">
+      <div class="gb-card-hdr"><span>🌎 Am. Latine</span><strong>3.14%</strong></div>
+      <div class="gb-card-bar"><div class="gb-card-fill" style="width:3.14%"></div></div>
+      <div class="gb-card-val">4,46 Mt</div>
+    </div>
+    <div class="gb-card" style="--c:#2471a3;">
+      <div class="gb-card-hdr"><span>🌍 Europe</span><strong>2.45%</strong></div>
+      <div class="gb-card-bar"><div class="gb-card-fill" style="width:2.45%"></div></div>
+      <div class="gb-card-val">3,48 Mt</div>
+    </div>
+    <div class="gb-card" style="--c:#00ffcc;border-color:rgba(0,255,204,0.15);">
+      <div class="gb-card-hdr"><span>🌑 Afrique</span><strong>1.93%</strong></div>
+      <div class="gb-card-bar"><div class="gb-card-fill" style="width:1.93%"></div></div>
+      <div class="gb-card-val">2,73 Mt</div>
+    </div>
+    <div class="gb-card" style="--c:#f39c12;">
+      <div class="gb-card-hdr"><span>🌎 Am. Nord</span><strong>0.44%</strong></div>
+      <div class="gb-card-bar"><div class="gb-card-fill" style="width:0.44%"></div></div>
+      <div class="gb-card-val">0,63 Mt</div>
+    </div>
+    <div class="gb-card" style="--c:#ca6f1e;">
+      <div class="gb-card-hdr"><span>🌏 Océanie</span><strong>0.18%</strong></div>
+      <div class="gb-card-bar"><div class="gb-card-fill" style="width:0.18%"></div></div>
+      <div class="gb-card-val">0,25 Mt</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM -->
+<div class="bottom">
+  <div class="bs" style="flex:1.4;">
+    <div class="bs-t">Production par Espèce &nbsp;<span>· Volume d'Afrique 2024 ·</span></div>
+    <div class="mb-wrap" id="mb-wrap"></div>
+  </div>
+  <div class="bs">
+    <div class="bs-t">Répartition <span>régionale Afrique 2024</span></div>
+    <div class="donut-w">
+      <svg id="donut" width="78" height="78" viewBox="0 0 78 78" flex-shrink="0"></svg>
+      <div class="dl" id="dl"></div>
+    </div>
+  </div>
+  <div class="bs">
+    <div class="bs-t">Évolution Afrique <span>2000 → 2024 (Mt)</span></div>
+    <div class="tr-wrap" id="tr-wrap"></div>
+  </div>
+</div>
+
+</div><!-- .app -->
+
+<!-- TOOLTIP -->
+<div id="tt">
+  <div class="tt-h">
+    <div id="tt-marker" style="color:var(--c1);display:flex;align-items:center;justify-content:center;width:14px;height:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:50%;padding:4px;flex-shrink:0;">
+      <i data-lucide="map-pin" style="width:10px;height:10px;stroke-width:2.2;"></i>
+    </div>
+    <div><div class="tt-nm" id="tt-nm">Pays</div><div class="tt-rg" id="tt-rg">Région</div></div>
+  </div>
+  <div class="tt-g">
+    <div class="tt-s"><div class="v" id="tt-prod">—</div><div class="l">Production 2024</div></div>
+    <div class="tt-s"><div class="v" id="tt-gr" style="color:var(--grn)">—</div><div class="l">Croissance/an</div></div>
+    <div class="tt-s"><div class="v" id="tt-sh">—</div><div class="l">Part Afrique</div></div>
+    <div class="tt-s"><div class="v" id="tt-rk">—</div><div class="l">Rang africain</div></div>
+  </div>
+  <div class="tt-bar-l">Part de la production africaine totale</div>
+  <div class="tt-bar-o"><div class="tt-bar-i" id="tt-bi"></div></div>
+  <div class="tt-sp-l" id="tt-spl">Espèces cultivées</div>
+  <div class="tt-tags" id="tt-tags"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
