@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="L'Afrique à sa Vraie Échelle — Visualiseur cartographique interactif exposant les déformations des cartes du monde. En soutien à l'initiative Correct The Map de l'Union Africaine.">
+  <title>L'Afrique à sa Vraie Échelle — Visualiseur Interactif</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Core Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Particle Background Canvas -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Container for wow click ripples -->
+  <div id="ripple-container"></div>
+
+  <!-- Cinematic Scanline -->
+  <div class="scanline"></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- INTRO SCREEN (L'ENTRÉE CINÉMATOGRAPHIQUE) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="intro" aria-label="Introduction">
+    <div id="intro-map-container">
+      <svg id="intro-map"></svg>
+    </div>
+    <div id="intro-overlay">
+      <div id="intro-text">
+        <p id="intro-line-1" class="intro-line">Voici la carte du monde que vous connaissez depuis toujours.</p>
+        <p id="intro-line-2" class="intro-line">Mais les cartes planes mentent sur les tailles.</p>
+        <p id="intro-line-3" class="intro-line">Découvrez la vraie taille de l'Afrique.</p>
+      </div>
+      <button id="intro-cta" class="btn-gold btn-glow" aria-label="Lancer le visualiseur">
+        <span>Lancer l'Expérience</span>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 3L17 10L10 17M3 10H17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MAIN APP CONTROLLER -->
+  <!-- ═══════════════════════════════════════════ -->
+  <main id="dashboard" class="hidden">
+
+    <!-- Sticky Header -->
+    <header id="app-header">
+      <div class="logo-area">
+        <span class="logo-main">AFRIQUE À SA VRAIE ÉCHELLE</span>
+        <span class="logo-sub">Expérience Cartographique Interactive</span>
+      </div>
+      <div class="projection-toggles">
+        <button class="toggle-btn active" data-mode="mercator">CARTE MERCATOR</button>
+        <button class="toggle-btn" data-mode="equalearth">EQUAL EARTH</button>
+        <button class="toggle-btn toggle-compare" data-mode="compare">BALAYER & COMPARER ⇔</button>
+      </div>
+    </header>
+
+    <!-- SECTION 1: THE INTERACTIVE GLOBE/MAP VISUALIZER -->
+    <section id="visualizer-section">
+      <div class="map-wrapper">
+        <div id="map-container">
+          <svg id="main-map"></svg>
+
+          <!-- Swipe Handle Divider -->
+          <div id="swipe-divider" class="hidden">
+            <div class="swipe-line"></div>
+            <div class="swipe-handle">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M8 6L3 12L8 18M16 6L21 12L16 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="swipe-label left-lbl">MERCATOR</div>
+            <div class="swipe-label right-lbl">EQUAL EARTH</div>
+          </div>
+        </div>
+
+        <!-- Floating Info Panel -->
+        <div id="info-panel" class="info-card">
+          <div class="info-default">
+            <div class="stat-group">
+              <span class="stat-number wow-number" id="africa-area-display" data-count="30.37" data-suffix=" M" data-decimals="2">0</span>
+              <span class="stat-unit">Millions de km²</span>
+              <span class="stat-label">Superficie Réelle de l'Afrique</span>
+            </div>
+            <div class="hint-text">
+              <span class="pulse-dot"></span> Cliquez sur un pays pour révéler sa taille réelle vs. sa perception sur la carte
+            </div>
+          </div>
+
+          <div class="info-country hidden">
+            <button class="close-panel-btn">×</button>
+            <h3 id="panel-country-name">Nom du pays</h3>
+            <p class="continent-tag" id="panel-country-continent">CONTINENT</p>
+            <div class="divider"></div>
+            <div class="stat-row">
+              <span class="lbl">Superficie Réelle</span>
+              <span class="val bold" id="panel-true-area">0 km²</span>
+            </div>
+            <div class="stat-row">
+              <span class="lbl">Gonflement Visuel Mercator</span>
+              <span class="val val-red" id="panel-mercator-inflation">+0%</span>
+            </div>
+            <div class="stat-row">
+              <span class="lbl">Erreur d'Échelle Equal Earth</span>
+              <span class="val val-green">0.0% (Exacte)</span>
+            </div>
+            <div class="stat-row">
+              <span class="lbl">Score de Déformation</span>
+              <div class="cdi-pill" id="panel-cdi-pill">
+                <span id="panel-cdi-score">0</span>/100
+              </div>
+            </div>
+            <p class="country-dynamic-desc" id="panel-country-desc"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: THE AFRICA PUZZLE GAME (Fly and fit countries) -->
+    <section id="puzzle-section" class="section-padding">
+      <div class="section-title">
+        <span class="step-num">MODULE 02</span>
+        <h2>Le Puzzle de la Vraie Échelle</h2>
+        <p class="subtitle">Pouvez-vous remplir la silhouette géante de l'Afrique ? Cliquez sur les territoires du monde pour les insérer dans sa superficie réelle.</p>
+      </div>
+
+      <div class="puzzle-layout">
+        <div class="puzzle-left">
+          <!-- Giant silhouette visualizer of Africa -->
+          <div class="puzzle-visual-canvas">
+            <svg id="puzzle-map"></svg>
+          </div>
+
+          <div class="puzzle-stat-box">
+            <div class="puzzle-total">
+              <span class="wow-number" id="puzzle-filled-pct">0</span>%
+            </div>
+            <div class="puzzle-label">SUPERFICIE DE L'AFRIQUE REMPLIE</div>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="puzzle-progress-container">
+            <div class="puzzle-progress-bar" id="puzzle-bar"></div>
+          </div>
+
+          <div class="puzzle-metrics">
+            <div class="pm-box">
+              <div class="pm-num" id="puzzle-countries-count">0</div>
+              <div class="pm-lbl">Territoires Injectés</div>
+            </div>
+            <div class="pm-box">
+              <div class="pm-num" id="puzzle-remaining-area">30.37M</div>
+              <div class="pm-lbl">Superficie Restante (km²)</div>
+            </div>
+          </div>
+
+          <button id="reset-puzzle-btn" class="btn-secondary">Réinitialiser le Puzzle</button>
+        </div>
+
+        <div class="puzzle-right">
+          <div class="territory-deck" id="territory-deck">
+            <!-- Programmatically populated with cards -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: THE DISTORTION DUEL (Silhouettes face-off) -->
+    <section id="duel-section" class="section-padding">
+      <div class="section-title">
+        <span class="step-num">MODULE 03</span>
+        <h2>Le Duel de Distorsion</h2>
+        <p class="subtitle">Sélectionnez deux régions du monde pour comparer leurs silhouettes réelles et leurs superficies côte à côte.</p>
+      </div>
+
+      <div class="duel-box">
+        <div class="duel-selectors">
+          <div class="select-wrapper">
+            <label for="duel-sel-a">Territoire A</label>
+            <select id="duel-sel-a" class="custom-select"></select>
+          </div>
+          <div class="duel-vs">VS</div>
+          <div class="select-wrapper">
+            <label for="duel-sel-b">Territoire B</label>
+            <select id="duel-sel-b" class="custom-select"></select>
+          </div>
+        </div>
+
+        <div class="duel-arena">
+          <!-- Card A -->
+          <div class="duel-card" id="duel-card-a">
+            <div class="card-country-name" id="duel-name-a">Groenland</div>
+            <div class="shape-preview">
+              <svg id="duel-svg-a" class="silhouette-svg"></svg>
+            </div>
+            <div class="card-stats">
+              <div class="card-stat"><span class="lbl">Superficie Réelle</span><span class="val" id="duel-area-a">2.17 M km²</span></div>
+              <div class="card-stat"><span class="lbl">Multiplicateur Mercator</span><span class="val val-red" id="duel-scale-a">10.49×</span></div>
+            </div>
+          </div>
+
+          <!-- Mid comparison screen -->
+          <div class="duel-compare-center">
+            <div class="comparison-bubble">
+              <div class="comp-headline">LA RÉALITÉ DU GLOBE</div>
+              <p class="comp-sentence" id="duel-outcome-sentence">Le Groenland est en réalité 14 fois plus petit que le continent africain.</p>
+            </div>
+            <div class="quick-duels">
+              <span class="quick-lbl">Exemples de duels :</span>
+              <button class="btn-quick-duel" data-a="GRL" data-b="DZA">Groenland vs Algérie</button>
+              <button class="btn-quick-duel" data-a="GBR" data-b="NGA">Royaume-Uni vs Nigeria</button>
+              <button class="btn-quick-duel" data-a="USA" data-b="COD">États-Unis vs RD Congo</button>
+            </div>
+          </div>
+
+          <!-- Card B -->
+          <div class="duel-card" id="duel-card-b">
+            <div class="card-country-name" id="duel-name-b">Algérie</div>
+            <div class="shape-preview">
+              <svg id="duel-svg-b" class="silhouette-svg"></svg>
+            </div>
+            <div class="card-stats">
+              <div class="card-stat"><span class="lbl">Superficie Réelle</span><span class="val" id="duel-area-b">2.38 M km²</span></div>
+              <div class="card-stat"><span class="lbl">Multiplicateur Mercator</span><span class="val val-green" id="duel-scale-b">1.00×</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: CITATION -->
+    <section id="action-section" class="section-padding">
+      <div class="action-container">
+        <div class="action-quote">
+          <blockquote>
+            "La carte n'est pas un simple dessin neutre. C'est elle qui dicte l'importance que nous nous accordons les uns aux autres."
+          </blockquote>
+          <cite>— Selma Malika Haddadi, Commission de l'Union Africaine</cite>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer id="app-footer">
+    <div class="footer-signature">Conçu par Moustapha Farah</div>
+    <div class="footer-links">
+      <span>Equal Earth (EPSG:8857)</span> · 
+      <span>Soutien à la campagne Correct The Map de l'Union Africaine</span> · 
+      <span>Données issues de Natural Earth & Britannica</span>
+    </div>
+  </footer>
+
+  <script src="wow.js"></script>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

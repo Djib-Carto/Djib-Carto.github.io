@@ -1,0 +1,107 @@
+{
+  "timeline": [
+    {
+      "year": 1569,
+      "month": null,
+      "title": "Mercator Projection Published",
+      "description": "Gerardus Mercator publishes the world map 'Nova et Aucta Orbis Terrae Descriptio ad Usum Navigantium', designed for maritime navigation. Rhumb lines appear as straight lines.",
+      "type": "projection",
+      "source": "Historical cartographic record"
+    },
+    {
+      "year": 1900,
+      "month": null,
+      "title": "Mercator Becomes Standard Wall Map",
+      "description": "Mercator projection increasingly adopted in schools, atlases, and institutions globally — a purpose it was never designed for.",
+      "type": "projection",
+      "source": "Cartographic history"
+    },
+    {
+      "year": 1973,
+      "month": null,
+      "title": "Arno Peters Launches Gall-Peters Debate",
+      "description": "German historian Arno Peters re-promotes the Gall-Peters equal-area projection, launching global debate on map projections and political representation.",
+      "type": "debate",
+      "source": "Board of World Missions (1974)"
+    },
+    {
+      "year": 1988,
+      "month": null,
+      "title": "Seven Major Cartographic Organizations Condemn Rectangular Projections",
+      "description": "American Cartographic Association and six other major cartographic bodies jointly condemn the use of rectangular world map projections (including Mercator and Peters) for general reference maps.",
+      "type": "institutional",
+      "source": "American Cartographic Association, 1989"
+    },
+    {
+      "year": 2018,
+      "month": "August",
+      "title": "Equal Earth Projection Created",
+      "description": "Bojan Šavrič, Tom Patterson, and Bernhard Jenny publish the Equal Earth projection — a new equal-area pseudocylindrical projection designed as a visually pleasing alternative for world maps. Pre-published online August 2018, formally published in IJGIS 2019.",
+      "type": "projection",
+      "source": "DOI: 10.1080/13658816.2018.1504949",
+      "url": "https://doi.org/10.1080/13658816.2018.1504949"
+    },
+    {
+      "year": 2019,
+      "month": null,
+      "title": "Equal Earth Formally Published in IJGIS",
+      "description": "The Equal Earth paper is formally published in the International Journal of Geographical Information Science (Vol. 33, Issue 3, pp. 454–465). Equal Earth receives EPSG code 8857.",
+      "type": "projection",
+      "source": "IJGIS / EPSG Registry",
+      "url": "https://doi.org/10.1080/13658816.2018.1504949"
+    },
+    {
+      "year": 2023,
+      "month": null,
+      "title": "Correct The Map Campaign Launched",
+      "description": "Africa No Filter and Speak Up Africa launch the 'Correct The Map' international campaign, formally advocating for global adoption of the Equal Earth projection to address African representation on world maps.",
+      "type": "campaign",
+      "source": "correctthemap.org / speakupafrica.org"
+    },
+    {
+      "year": 2025,
+      "month": "August",
+      "title": "African Union Endorses Correct The Map",
+      "description": "The African Union Commission officially endorses the Correct The Map campaign. Deputy Chairperson Selma Malika Haddadi states: 'It might seem to be just a map, but in reality, it is not.'",
+      "type": "institutional",
+      "source": "African Union Commission / Speak Up Africa",
+      "url": "https://speakupafrica.org"
+    },
+    {
+      "year": 2026,
+      "month": "April",
+      "title": "AU Assembly Formally Promotes Equal Earth",
+      "description": "The Assembly of the African Union, at its 39th Ordinary Session, adopts a formal decision promoting Equal Earth as the recommended projection standard for global cartography, geospatial systems, and educational curricula, in alignment with AU Agenda 2063.",
+      "type": "institutional",
+      "source": "African Union Assembly, 39th Ordinary Session",
+      "url": "https://au.int"
+    }
+  ],
+  "supporters": [
+    {
+      "name": "African Union",
+      "type": "OFFICIALLY SUPPORTED",
+      "year": 2025,
+      "source": "AU Commission endorsement, August 2025"
+    },
+    {
+      "name": "Africa No Filter",
+      "type": "CAMPAIGN LEADER",
+      "year": 2023,
+      "source": "correctthemap.org"
+    },
+    {
+      "name": "Speak Up Africa",
+      "type": "CAMPAIGN LEADER",
+      "year": 2023,
+      "source": "speakupafrica.org"
+    },
+    {
+      "name": "World Bank (partial transition)",
+      "type": "IN TRANSITION",
+      "year": 2024,
+      "source": "Reported phasing out of Mercator projection in World Bank materials",
+      "note": "Not yet fully confirmed as official policy — listed as 'in transition'"
+    }
+  ]
+}

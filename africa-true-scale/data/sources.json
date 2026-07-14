@@ -1,0 +1,132 @@
+{
+  "sources": [
+    {
+      "id": "equal-earth-paper",
+      "title": "The Equal Earth map projection",
+      "authors": ["Bojan Šavrič", "Tom Patterson", "Bernhard Jenny"],
+      "journal": "International Journal of Geographical Information Science",
+      "year": 2019,
+      "volume": 33,
+      "issue": 3,
+      "pages": "454–465",
+      "doi": "10.1080/13658816.2018.1504949",
+      "url": "https://doi.org/10.1080/13658816.2018.1504949",
+      "consulted": "2026-07-14",
+      "used_for": "Equal Earth projection definition, authorship, date"
+    },
+    {
+      "id": "equal-earth-website",
+      "title": "Equal Earth — Official Project Website",
+      "organization": "Bojan Šavrič, Tom Patterson, Bernhard Jenny",
+      "url": "https://equal-earth.com",
+      "consulted": "2026-07-14",
+      "used_for": "Projection properties, usage guidelines, visual assets"
+    },
+    {
+      "id": "mercator-1569",
+      "title": "Nova et Aucta Orbis Terrae Descriptio ad Usum Navigantium Emendate Accommodata",
+      "authors": ["Gerardus Mercator"],
+      "year": 1569,
+      "used_for": "Historical origin and navigational purpose of Mercator projection"
+    },
+    {
+      "id": "au-endorsement-2025",
+      "title": "African Union endorses Correct The Map campaign",
+      "organization": "African Union Commission",
+      "year": 2025,
+      "month": "August",
+      "url": "https://au.int",
+      "consulted": "2026-07-14",
+      "used_for": "AU institutional endorsement, quote by Deputy Chairperson Selma Malika Haddadi"
+    },
+    {
+      "id": "au-assembly-2026",
+      "title": "Decision of the 39th Ordinary Session of the Assembly of the African Union",
+      "organization": "African Union Assembly",
+      "year": 2026,
+      "month": "April",
+      "session": "39th Ordinary Session",
+      "used_for": "Formal AU decision to promote Equal Earth projection adoption"
+    },
+    {
+      "id": "correct-the-map",
+      "title": "Correct The Map Campaign",
+      "organizations": ["Africa No Filter", "Speak Up Africa"],
+      "url": "https://correctthemap.org",
+      "consulted": "2026-07-14",
+      "used_for": "Campaign objectives, institutional targets, context"
+    },
+    {
+      "id": "natural-earth",
+      "title": "Natural Earth — Free Vector and Raster Map Data",
+      "organization": "Natural Earth",
+      "url": "https://www.naturalearthdata.com",
+      "consulted": "2026-07-14",
+      "used_for": "World administrative boundaries (1:110m resolution)"
+    },
+    {
+      "id": "world-atlas-topojson",
+      "title": "world-atlas v2.0.2 — TopoJSON files for the world",
+      "organization": "Observable / Mike Bostock",
+      "url": "https://github.com/topojson/world-atlas",
+      "cdn_url": "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json",
+      "consulted": "2026-07-14",
+      "used_for": "TopoJSON country boundaries for D3.js rendering"
+    },
+    {
+      "id": "epsg-8857",
+      "title": "EPSG:8857 — WGS 84 / Equal Earth Greenwich",
+      "organization": "EPSG Geodetic Parameter Registry",
+      "url": "https://epsg.io/8857",
+      "consulted": "2026-07-14",
+      "used_for": "Official EPSG code for Equal Earth projection"
+    },
+    {
+      "id": "epsg-3857",
+      "title": "EPSG:3857 — WGS 84 / Pseudo-Mercator (Web Mercator)",
+      "organization": "EPSG Geodetic Parameter Registry",
+      "url": "https://epsg.io/3857",
+      "consulted": "2026-07-14",
+      "used_for": "Web Mercator projection identification and properties"
+    },
+    {
+      "id": "africa-area-britannica",
+      "title": "Africa — Encyclopedia Britannica",
+      "organization": "Encyclopædia Britannica",
+      "url": "https://www.britannica.com/place/Africa",
+      "consulted": "2026-07-14",
+      "data": "Africa area: ~30,365,000 km²",
+      "used_for": "Africa geodesic land area verification"
+    },
+    {
+      "id": "cia-world-factbook",
+      "title": "CIA World Factbook — Country Areas",
+      "organization": "Central Intelligence Agency, USA",
+      "url": "https://www.cia.gov/the-world-factbook",
+      "consulted": "2026-07-14",
+      "used_for": "National land areas (km²) for all countries"
+    },
+    {
+      "id": "d3-geo",
+      "title": "d3-geo — Geographic Projections, Shapes and Math",
+      "organization": "Observable / Mike Bostock",
+      "url": "https://github.com/d3/d3-geo",
+      "used_for": "D3.js library providing d3.geoEqualEarth() and d3.geoMercator() projections"
+    },
+    {
+      "id": "mercator-formula",
+      "title": "Mercator Projection — Mathematical Properties",
+      "url": "https://en.wikipedia.org/wiki/Mercator_projection",
+      "used_for": "Scale factor formula: k = sec(φ) = 1/cos(φ); Area distortion: sec²(φ)"
+    },
+    {
+      "id": "greenland-area",
+      "title": "Greenland Land Area",
+      "organization": "Statistics Greenland (Naalakkersuisut)",
+      "url": "https://stat.gl",
+      "data": "Greenland ice-free land area: 410,449 km²; Total area: 2,166,086 km²",
+      "consulted": "2026-07-14",
+      "used_for": "Greenland true area for comparison with Africa"
+    }
+  ]
+}
