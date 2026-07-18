@@ -1,29 +1,36 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoralGuard - Suivi Mondial du Blanchissement des Coraux</title>
-    
+
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Découvrez une carte interactive en temps réel de l'état thermique et du blanchissement des récifs coralliens mondiaux basée sur les stations virtuelles de la NOAA.">
-    <meta name="keywords" content="coraux, blanchissement, carte interactive, écologie, réchauffement climatique, NOAA, récif corallien, océanographie">
+    <meta name="description"
+        content="Découvrez une carte interactive en temps réel de l'état thermique et du blanchissement des récifs coralliens mondiaux basée sur les stations virtuelles de la NOAA.">
+    <meta name="keywords"
+        content="coraux, blanchissement, carte interactive, écologie, réchauffement climatique, NOAA, récif corallien, océanographie">
     <meta name="author" content="CoralGuard Project">
-    
+
     <!-- Google Fonts (Outfit & Plus Jakarta Sans) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css?v=3">
 </head>
+
 <body>
     <div class="bg-blob blob-1"></div>
     <div class="bg-blob blob-2"></div>
@@ -57,12 +64,13 @@
                     <div class="search-container">
                         <div class="search-box">
                             <i class="fa-solid fa-search"></i>
-                            <input type="text" id="station-search" placeholder="Rechercher une station..." autocomplete="off">
+                            <input type="text" id="station-search" placeholder="Rechercher une station..."
+                                autocomplete="off">
                             <button id="clear-search" class="hidden-btn"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                         <div id="search-suggestions" class="search-suggestions-box hidden"></div>
                     </div>
-                    
+
                     <div class="filter-group">
                         <label for="filter-alert">Niveau de stress thermique :</label>
                         <select id="filter-alert">
@@ -137,7 +145,8 @@
                 <div class="glass-card leaderboard-card">
                     <h2><i class="fa-solid fa-fire-flame-simple text-orange"></i> Points Chauds Critiques</h2>
                     <div id="risk-leaderboard" class="leaderboard-list">
-                        <div class="leaderboard-item text-muted" style="justify-content: center; font-size: 0.8rem; padding: 1rem;">
+                        <div class="leaderboard-item text-muted"
+                            style="justify-content: center; font-size: 0.8rem; padding: 1rem;">
                             <i class="fa-solid fa-spinner fa-spin"></i> Chargement...
                         </div>
                     </div>
@@ -161,20 +170,23 @@
 
             <!-- Right Detail Panel (Collapsible) -->
             <aside id="detail-panel" class="detail-sidebar glass-card closed">
-                <button id="close-detail" class="close-btn" aria-label="Fermer le panneau"><i class="fa-solid fa-xmark"></i></button>
-                
+                <button id="close-detail" class="close-btn" aria-label="Fermer le panneau"><i
+                        class="fa-solid fa-xmark"></i></button>
+
                 <div class="detail-scroll">
                     <div id="detail-welcome" class="detail-welcome">
                         <i class="fa-solid fa-circle-info welcome-icon"></i>
                         <h3>Sélectionnez une station</h3>
-                        <p>Cliquez sur une station sur la carte ou recherchez-la dans la barre latérale pour analyser les données de stress thermique en temps réel.</p>
+                        <p>Cliquez sur une station sur la carte ou recherchez-la dans la barre latérale pour analyser
+                            les données de stress thermique en temps réel.</p>
                     </div>
 
                     <div id="detail-content" class="detail-content hidden">
                         <!-- Station Header -->
                         <div class="detail-station-header">
                             <h3 id="detail-name">Nom de la station</h3>
-                            <div class="detail-coord"><i class="fa-solid fa-location-dot"></i> <span id="detail-lat-lon">Latitude, Longitude</span></div>
+                            <div class="detail-coord"><i class="fa-solid fa-location-dot"></i> <span
+                                    id="detail-lat-lon">Latitude, Longitude</span></div>
                         </div>
 
                         <!-- Gauge and Alert Banner -->
@@ -182,7 +194,8 @@
                             <div class="radial-gauge-wrapper">
                                 <svg class="radial-gauge" viewBox="0 0 100 100">
                                     <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
-                                    <circle class="gauge-progress" id="gauge-arc" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                                    <circle class="gauge-progress" id="gauge-arc" cx="50" cy="50" r="40"
+                                        stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
                                 </svg>
                                 <div class="gauge-text-center">
                                     <span class="gauge-value" id="gauge-level-num">-</span>
@@ -201,28 +214,32 @@
                                     <i class="fa-solid fa-temperature-high text-cyan"></i>
                                     <span>Temp. de surface (SST)</span>
                                 </div>
-                                <div class="metric-value"><span id="metric-sst">-</span> <span class="unit">°C</span></div>
+                                <div class="metric-value"><span id="metric-sst">-</span> <span class="unit">°C</span>
+                                </div>
                             </div>
                             <div class="metric-box">
                                 <div class="metric-header">
                                     <i class="fa-solid fa-arrow-trend-up text-orange"></i>
                                     <span>Anomalie (SSTA)</span>
                                 </div>
-                                <div class="metric-value"><span id="metric-ssta">-</span> <span class="unit">°C</span></div>
+                                <div class="metric-value"><span id="metric-ssta">-</span> <span class="unit">°C</span>
+                                </div>
                             </div>
                             <div class="metric-box">
                                 <div class="metric-header">
                                     <i class="fa-solid fa-sun text-yellow"></i>
                                     <span>Point chaud (Hotspot)</span>
                                 </div>
-                                <div class="metric-value"><span id="metric-hs">-</span> <span class="unit">°C</span></div>
+                                <div class="metric-value"><span id="metric-hs">-</span> <span class="unit">°C</span>
+                                </div>
                             </div>
                             <div class="metric-box">
                                 <div class="metric-header">
                                     <i class="fa-solid fa-fire-flame-curved text-alert"></i>
                                     <span>Stress cumulé (DHW)</span>
                                 </div>
-                                <div class="metric-value"><span id="metric-dhw">-</span> <span class="unit">sem.</span></div>
+                                <div class="metric-value"><span id="metric-dhw">-</span> <span class="unit">sem.</span>
+                                </div>
                             </div>
                         </div>
 
@@ -249,14 +266,17 @@
 
         <!-- Footer -->
         <footer class="app-footer">
-            <p>CoralGuard © 2026. Conçu à des fins éducatives et de sensibilisation. Données fournies par la <strong>NOAA Coral Reef Watch</strong>.</p>
+            <p>CoralGuard © 2026 — Réalisé par : <strong>Moustapha Farah</strong>. Données fournies par la <strong>NOAA
+                    Coral Reef Watch</strong>.</p>
         </footer>
     </div>
 
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <!-- Custom JS -->
     <script src="app.js?v=3"></script>
 </body>
+
 </html>
