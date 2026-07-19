@@ -158,10 +158,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (features.length > 0 && features[0].properties.date) {
             const dateStr = features[0].properties.date;
             try {
-                const dateObj = new Date(dateStr);
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                const formatter = new Intl.DateTimeFormat('fr-FR', options);
-                document.getElementById('update-date').innerText = `Données NOAA du : ${formatter.format(dateObj)}`;
+                // Évite le décalage de fuseau horaire en découpant la date YYYY-MM-DD
+                const parts = dateStr.split('-');
+                const year = parts[0];
+                const monthIndex = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[2], 10);
+                
+                const months = [
+                    'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
+                    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+                ];
+                
+                const formattedDate = `${day} ${months[monthIndex]} ${year}`;
+                document.getElementById('update-date').innerText = `Données NOAA du : ${formattedDate}`;
             } catch (e) {
                 document.getElementById('update-date').innerText = `Date : ${dateStr}`;
             }
@@ -177,6 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let atRiskCount = 0;
         let maxSSTA = -Infinity;
         let maxDHW = -Infinity;
+        
+        // Distribution des alertes (0 à 4)
+        const distribution = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
 
         features.forEach(f => {
             const props = f.properties;
@@ -186,6 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (alert >= 3) {
                 atRiskCount++;
             }
+
+            // Calcul distribution
+            const safeAlert = Math.max(0, Math.min(alert, 4));
+            distribution[safeAlert]++;
 
             // Calcul anomalie max
             const ssta = parseFloat(props.ssta);
@@ -211,6 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Remplir le tableau des points chauds critiques
         populateLeaderboard(features);
+        
+        // Remplir le graphique de répartition des alertes
+        populateDistribution(distribution, total);
     }
 
     // Remplissage dynamique du tableau des risques globaux (Leaderboard DHW)
@@ -256,6 +275,59 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             container.appendChild(item);
+        });
+    }
+
+    // Remplissage dynamique de la barre de répartition des alertes
+    function populateDistribution(dist, total) {
+        const barContainer = document.getElementById('dist-bar');
+        const legendContainer = document.getElementById('dist-legend');
+        if (!barContainer || !legendContainer) return;
+        
+        barContainer.innerHTML = '';
+        legendContainer.innerHTML = '';
+
+        Object.keys(dist).forEach(level => {
+            const count = dist[level];
+            const percentage = total > 0 ? ((count / total) * 100) : 0;
+            const config = getAlertConfig(level);
+
+            if (count > 0) {
+                // Créer le segment de barre empilée
+                const segment = document.createElement('div');
+                segment.className = 'dist-segment';
+                segment.style.width = `${percentage}%`;
+                segment.style.backgroundColor = config.color;
+                segment.style.boxShadow = `0 0 10px ${config.color}80`;
+                segment.title = `${config.label}: ${count} stations (${percentage.toFixed(0)}%)`;
+                
+                // Filtrer la carte en cliquant sur le segment
+                segment.addEventListener('click', () => {
+                    document.getElementById('filter-alert').value = level;
+                    applyFilters(level);
+                });
+
+                barContainer.appendChild(segment);
+            }
+
+            // Créer l'élément de légende interactif
+            const legendItem = document.createElement('div');
+            legendItem.className = 'dist-legend-item';
+            legendItem.style.cursor = 'pointer';
+            legendItem.innerHTML = `
+                <span class="dist-legend-dot" style="background-color: ${config.color}; box-shadow: 0 0 5px ${config.color}"></span>
+                <span class="dist-legend-name">${config.label}</span>
+                <span class="dist-legend-val">${count} <span style="font-size: 0.65rem; color: var(--text-secondary); font-weight: normal;">(${percentage.toFixed(0)}%)</span></span>
+            `;
+            
+            legendItem.addEventListener('click', () => {
+                const currentFilter = document.getElementById('filter-alert').value;
+                const newFilter = currentFilter === String(level) ? 'all' : String(level);
+                document.getElementById('filter-alert').value = newFilter;
+                applyFilters(newFilter);
+            });
+            
+            legendContainer.appendChild(legendItem);
         });
     }
 

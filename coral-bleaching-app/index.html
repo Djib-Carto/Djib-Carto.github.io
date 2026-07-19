@@ -28,7 +28,7 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=5">
 </head>
 
 <body>
@@ -53,6 +53,38 @@
                 </div>
             </div>
         </header>
+
+        <!-- Stats Bar (Horizontal KPIs) -->
+        <section class="stats-bar">
+            <div class="kpi-card glass-card">
+                <div class="kpi-icon coral-glow-bg"><i class="fa-solid fa-temperature-arrow-up"></i></div>
+                <div class="kpi-info">
+                    <span class="kpi-value" id="kpi-stations-count">-</span>
+                    <span class="kpi-label">Stations Surveillées</span>
+                </div>
+            </div>
+            <div class="kpi-card glass-card">
+                <div class="kpi-icon warning-glow-bg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="kpi-info">
+                    <span class="kpi-value text-warning" id="kpi-stations-risk">-</span>
+                    <span class="kpi-label">Stations en Alerte 1 ou 2</span>
+                </div>
+            </div>
+            <div class="kpi-card glass-card">
+                <div class="kpi-icon alert-glow-bg"><i class="fa-solid fa-fire"></i></div>
+                <div class="kpi-info">
+                    <span class="kpi-value text-alert" id="kpi-max-ssta">-</span>
+                    <span class="kpi-label">Anomalie Max (°C)</span>
+                </div>
+            </div>
+            <div class="kpi-card glass-card">
+                <div class="kpi-icon dhw-glow-bg"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div class="kpi-info">
+                    <span class="kpi-value text-dhw" id="kpi-max-dhw">-</span>
+                    <span class="kpi-label">DHW Max (Semaines)</span>
+                </div>
+            </div>
+        </section>
 
         <!-- Main Content Layout -->
         <main class="app-main">
@@ -84,6 +116,19 @@
                     </div>
                 </div>
 
+                <!-- Distribution de l'état de santé -->
+                <div class="glass-card distribution-card">
+                    <h2><i class="fa-solid fa-chart-pie text-cyan"></i> Répartition des Alertes</h2>
+                    <div class="distribution-bar-wrapper">
+                        <div class="distribution-bar" id="dist-bar">
+                            <!-- Les segments s'ajouteront ici en JS -->
+                        </div>
+                    </div>
+                    <div class="distribution-legend" id="dist-legend">
+                        <!-- La légende détaillée s'ajoutera ici en JS -->
+                    </div>
+                </div>
+
                 <!-- Region Quick Links -->
                 <div class="glass-card regions-card">
                     <h2><i class="fa-solid fa-earth-oceania"></i> Régions Clés</h2>
@@ -109,37 +154,7 @@
                     </div>
                 </div>
 
-                <!-- Global Stats KPI -->
-                <div class="kpi-container">
-                    <div class="kpi-card glass-card">
-                        <div class="kpi-icon coral-glow-bg"><i class="fa-solid fa-temperature-arrow-up"></i></div>
-                        <div class="kpi-info">
-                            <span class="kpi-value" id="kpi-stations-count">-</span>
-                            <span class="kpi-label">Stations Surveillées</span>
-                        </div>
-                    </div>
-                    <div class="kpi-card glass-card">
-                        <div class="kpi-icon warning-glow-bg"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                        <div class="kpi-info">
-                            <span class="kpi-value text-warning" id="kpi-stations-risk">-</span>
-                            <span class="kpi-label">Stations en Alerte 1 ou 2</span>
-                        </div>
-                    </div>
-                    <div class="kpi-card glass-card">
-                        <div class="kpi-icon alert-glow-bg"><i class="fa-solid fa-fire"></i></div>
-                        <div class="kpi-info">
-                            <span class="kpi-value text-alert" id="kpi-max-ssta">-</span>
-                            <span class="kpi-label">Anomalie Max (°C)</span>
-                        </div>
-                    </div>
-                    <div class="kpi-card glass-card">
-                        <div class="kpi-icon dhw-glow-bg"><i class="fa-solid fa-hourglass-half"></i></div>
-                        <div class="kpi-info">
-                            <span class="kpi-value text-dhw" id="kpi-max-dhw">-</span>
-                            <span class="kpi-label">DHW Max (Semaines)</span>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- Risk Leaderboard -->
                 <div class="glass-card leaderboard-card">
@@ -276,7 +291,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Custom JS -->
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=5"></script>
 </body>
 
 </html>
